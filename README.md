@@ -72,6 +72,25 @@ Räntan slår både på det egna lånet och – med fördröjning enligt föreni
 föreningens lån. Kända händelser (stambyte som ökar föreningens skuld, höjd tomträttsavgäld) läggs in per år.
 Logik: `web/src/lib/projection.ts`.
 
+### Databas
+
+SQLite via Nodes inbyggda `node:sqlite` – ingen separat databastjänst. Filen hamnar i `web/data/leygen.db`
+(ändra med `DATABASE_PATH`). Backup = kopiera filen. All databaskod ligger bakom gränssnittet `Store` i
+`web/server/store.ts`, med vanliga SQL-migreringar, så att den kan flyttas till Postgres/Supabase senare.
+
+- **Inlästa årsredovisningar** cachas per fil (SHA-256) och per org.nr. Samma PDF läses aldrig in två gånger, och
+  andra användare kan hämta en redan inläst förening via org.nr under Granska BRF – gratis och direkt.
+- **Slutpriser** kan rapporteras under fliken *Rapportera slutpris* (kräver samtycke). Användaren får en
+  raderingsnyckel. Statistik visas bara för orter med minst tre försäljningar.
+
+| Endpoint | Beskrivning |
+|---|---|
+| `POST /api/brf/extract` | PDF → nyckeltal (cachat) |
+| `GET /api/brf/by-org/:orgNr` | Senast inlästa årsredovisning för föreningen |
+| `POST /api/sales` | Rapportera slutpris |
+| `DELETE /api/sales/:id` | Radera rapport (header `x-delete-token`) |
+| `GET /api/sales/summary` | Median kr/kvm per ort |
+
 All beräkningslogik ligger i `web/src/lib/` som rena funktioner och är testad (`npm test`).
 
 ### Regler som används (från 1 april 2026)

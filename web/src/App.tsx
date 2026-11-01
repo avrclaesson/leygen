@@ -4,6 +4,7 @@ import KopSalj from './pages/KopSalj';
 import Brf from './pages/Brf';
 import Framtid from './pages/Framtid';
 import Varde from './pages/Varde';
+import Slutpris from './pages/Slutpris';
 
 const TABS = [
   { id: 'kalkyl', label: 'Månadskostnad & KALP', component: Kalkyl },
@@ -11,6 +12,7 @@ const TABS = [
   { id: 'brf', label: 'Granska BRF', component: Brf },
   { id: 'varde', label: 'Värdering', component: Varde },
   { id: 'framtid', label: 'Kostnad över tid', component: Framtid },
+  { id: 'slutpris', label: 'Rapportera slutpris', component: Slutpris },
 ] as const;
 
 export default function App() {

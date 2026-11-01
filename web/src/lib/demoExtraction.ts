@@ -1,4 +1,4 @@
-import type { ConsistencyIssue, ExtractedBrf } from './brfExtraction';
+import type { ConsistencyIssue, ExtractedBrf } from './brfExtraction.ts';
 
 /** Påhittat exempel på inläst årsredovisning, för demoläget. */
 export const DEMO_EXTRACTION: ExtractedBrf & { model: string; consistencyIssues: ConsistencyIssue[] } = {

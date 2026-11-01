@@ -25,3 +25,6 @@ dist-ssr
 
 # Årsredovisningar för eval (kan innehålla uppgifter man inte vill publicera)
 eval/reports/*.pdf
+
+# Lokal databas
+data/
