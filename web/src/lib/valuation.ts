@@ -160,3 +160,66 @@ export function valuate(v: ValuationInput): Valuation {
   const estimate = base + adj.reduce((s, a) => s + a.amount, 0);
   return { base, adjustments: adj, estimate, overprice: v.askingPrice - estimate };
 }
+
+export interface MarketAssumptions {
+  /** Prisförändring per 1 000 kr högre månadskostnad (Wilhelmsson 2025: −2–3 %). */
+  perThousandMonthly: number;
+  /** Tomträttsrabatt (Boberg m.fl. 2025: −3,6 % innerstad, −6,8 % förort). */
+  leaseholdPct: number;
+}
+
+export const MARKET_CENTRAL: MarketAssumptions = { perThousandMonthly: -0.025, leaseholdPct: -0.036 };
+export const MARKET_SUBURB: MarketAssumptions = { perThousandMonthly: -0.025, leaseholdPct: -0.068 };
+
+/**
+ * "Vad marknaden brukar betala": samma lägenhet, men med de effekter som studier
+ * faktiskt mätt på slutpriser. Köpare tittar främst på avgiften och prisar in den
+ * svagare än den ekonomiska kalkylen, och de bortser oftast från framtida händelser.
+ */
+export function valuateMarket(v: ValuationInput, m: MarketAssumptions): Valuation {
+  const base = v.areaPricePerSqm * v.area;
+  const adj: Adjustment[] = [];
+  const add = (key: string, label: string, amount: number, explanation: string) => {
+    if (Math.abs(amount) >= 1) adj.push({ key, label, amount, explanation });
+  };
+  const perKr = (m.perThousandMonthly / 1000) * base;
+
+  const feeDiffMonthly = ((v.feePerSqmYear - v.areaFeePerSqmYear) * v.area) / 12;
+  add(
+    'fee',
+    'Avgift jämfört med området',
+    feeDiffMonthly * perKr,
+    `Köpare prisar in avgiften – inklusive föreningens räntor – med ca ${Math.abs(m.perThousandMonthly * 100).toLocaleString('sv-SE')} % per 1 000 kr/mån (Wilhelmsson, KTH 2025). Föreningens skuld i sig syns bara via avgiften.`,
+  );
+
+  if (v.directElectricHeating) {
+    add(
+      'heating',
+      'Direktverkande el',
+      (v.ownHeatingCostYear / 12) * perKr,
+      'Ingen studie mäter detta direkt. Antagande: elkostnaden prisas in som en avgift.',
+    );
+  }
+
+  if (v.pipeRenovationPlanned && !v.pipeRenovationAlreadyInDebt) {
+    const expectedFeeIncrease = (v.pipeRenovationCostPerSqm * v.area * v.brfRate) / 12;
+    add(
+      'pipes',
+      `Stambyte om ${v.pipeRenovationYears} år`,
+      expectedFeeIncrease * perKr * (v.pipeRenovationYears <= 2 ? 1 : 0.5),
+      'Ingen studie mäter detta direkt. Antagande: köpare prisar in den väntade avgiftshöjningen, men bara till hälften om stambytet ligger mer än två år bort.',
+    );
+  }
+
+  if (v.leasehold) {
+    add('leasehold', 'Tomträtt', base * m.leaseholdPct, 'Uppmätt rabatt för tomträtt i Stockholm (Boberg, Donner & Metsalo, KTH 2025).');
+  }
+
+  if (v.groundFloor) add('groundFloor', 'Bottenvåning', base * v.groundFloorPct, 'Tumregel, inte uppmätt.');
+  if (v.noBalcony) add('balcony', 'Saknar balkong', base * v.noBalconyPct, 'Booli 2024: balkong ger ca +1,9 %.');
+  if (v.noElevatorHighFloor) add('elevator', 'Ingen hiss (högt upp)', base * v.noElevatorPct, 'Tumregel, inte uppmätt.');
+  if (v.renovationNeed > 0) add('renovation', 'Renoveringsbehov', -v.renovationNeed, 'Beräknad kostnad för att nå områdets standard.');
+
+  const estimate = base + adj.reduce((s, a) => s + a.amount, 0);
+  return { base, adjustments: adj, estimate, overprice: v.askingPrice - estimate };
+}

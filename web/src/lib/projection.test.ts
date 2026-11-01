@@ -91,3 +91,28 @@ describe('valuation', () => {
     expect(r.adjustments.find((a) => a.key === 'leasehold')!.amount).toBeCloseTo(-(300_000 * share) / 0.05);
   });
 });
+
+describe('market valuation', async () => {
+  const { valuateMarket, MARKET_CENTRAL, MARKET_SUBURB } = await import('./valuation');
+
+  it('equals area price for an average apartment', () => {
+    expect(valuateMarket(v, MARKET_CENTRAL).estimate).toBe(3_600_000);
+  });
+
+  it('prices 1 000 kr/month higher fee at −2.5 %', () => {
+    // 200 kr/kvm/år × 60 kvm / 12 = 1 000 kr/mån högre avgift
+    const r = valuateMarket({ ...v, feePerSqmYear: 900 }, MARKET_CENTRAL);
+    expect(r.adjustments.find((a) => a.key === 'fee')!.amount).toBeCloseTo(-0.025 * 3_600_000);
+  });
+
+  it('uses measured leasehold discounts and ignores rentals', () => {
+    const lv = { ...v, leasehold: true, rentalUnits: 2, rentalSalePrice: 2_000_000, rentalConversionProbability: 1 };
+    expect(valuateMarket(lv, MARKET_CENTRAL).estimate).toBeCloseTo(3_600_000 * (1 - 0.036));
+    expect(valuateMarket(lv, MARKET_SUBURB).estimate).toBeCloseTo(3_600_000 * (1 - 0.068));
+  });
+
+  it('market penalizes high BRF debt less than the economic model', () => {
+    const highDebt = { ...v, debtPerSqm: 14_000, feePerSqmYear: 700 + 8_000 * 0.03 };
+    expect(valuateMarket(highDebt, MARKET_CENTRAL).estimate).toBeGreaterThan(valuate(highDebt).estimate);
+  });
+});

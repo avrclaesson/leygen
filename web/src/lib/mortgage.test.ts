@@ -151,6 +151,7 @@ describe('brf extraction merge', async () => {
     depreciation: 1_100_000, plannedMaintenance: 0, energyCosts: null, cash: 1_200_000,
     averageInterestRate: 0.032, debtMaturingWithin12Months: 5_000_000,
     leasehold: true, genuineHousingCoop: null, buildYear: 1962, lastPipeRenovation: null,
+    plannedPipeRenovationYear: null, plannedPipeRenovationCost: null, groundRent: null, groundRentRenegotiationYear: null, rentalApartmentCount: null,
     reportedKeyFigures: { debtPerSqm: 6222, savingsPerSqm: null, feePerSqm: 738, interestSensitivityPercent: 9 },
     plannedFeeChange: null, findings: [{ severity: 'warning', text: 'Stambyte planerat 2027' }], uncertainFields: [],
   });
@@ -179,6 +180,7 @@ describe('brf extraction consistency', async () => {
     depreciation: 0, plannedMaintenance: 0, energyCosts: 0, cash: 0,
     averageInterestRate: 0.03, debtMaturingWithin12Months: null,
     leasehold: null, genuineHousingCoop: null, buildYear: null, lastPipeRenovation: null,
+    plannedPipeRenovationYear: null, plannedPipeRenovationCost: null, groundRent: null, groundRentRenegotiationYear: null, rentalApartmentCount: null,
     reportedKeyFigures: { debtPerSqm: 6000, savingsPerSqm: null, feePerSqm: 750, interestSensitivityPercent: null },
     plannedFeeChange: null, findings: [], uncertainFields: [],
   };

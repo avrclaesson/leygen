@@ -22,6 +22,9 @@ export const SYSTEM_PROMPT = `Du extraherar uppgifter ur årsredovisningar för 
 - leasehold: true om fastigheten innehas med tomträtt (ordet "tomträtt" eller "tomträttsavgäld"), false om föreningen äger marken.
 - genuineHousingCoop: true om det står att föreningen är ett privatbostadsföretag/äkta bostadsrättsförening, false om "oäkta". null om det inte framgår.
 - lastPipeRenovation: år för genomfört stambyte enligt förvaltningsberättelsen eller underhållsplanen. Planerade stambyten räknas INTE här – lägg dem i findings.
+- plannedPipeRenovationYear, plannedPipeRenovationCost: kommande stambyte enligt underhållsplanen eller förvaltningsberättelsen (år och total kostnad). null om inget stambyte planeras eller det inte framgår.
+- groundRent: tomträttsavgäld per år (resultaträkningen/noten om driftkostnader). groundRentRenegotiationYear: när avgälden omregleras nästa gång.
+- rentalApartmentCount: antal lägenheter upplåtna med hyresrätt.
 - yearlyFees: posten "Årsavgifter" (eller "Årsavgifter bostäder") i resultaträkningen eller noten om nettoomsättning. Ta INTE med hyresintäkter, lokalhyror eller andra intäkter.
 - totalRevenue: "Summa rörelseintäkter" (eller "Nettoomsättning" + "Övriga rörelseintäkter").
 - netResult: "Årets resultat".

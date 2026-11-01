@@ -70,6 +70,11 @@ export const FIELD_LABELS: Record<string, string> = {
   genuineHousingCoop: 'äkta förening',
   buildYear: 'byggår',
   lastPipeRenovation: 'senaste stambyte',
+  plannedPipeRenovationYear: 'planerat stambyte (år)',
+  plannedPipeRenovationCost: 'planerat stambyte (kostnad)',
+  groundRent: 'tomträttsavgäld',
+  groundRentRenegotiationYear: 'omreglering av avgäld',
+  rentalApartmentCount: 'antal hyresrätter',
 };
 
 export interface ConsistencyIssue {

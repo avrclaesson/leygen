@@ -15,7 +15,7 @@ type State =
 
 const SEVERITY_ICON = { info: 'ℹ️', warning: '⚠️', critical: '🛑' } as const;
 
-export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: ExtractedBrf) => void }) {
+export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: ExtractionResult) => void }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
 
   async function upload(file: File) {

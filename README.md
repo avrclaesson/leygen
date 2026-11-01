@@ -34,6 +34,20 @@ tailscale funnel 8787                        # publik https-länk: https://<dato
 - Ska bara personer i ditt tailnet komma åt den: använd `tailscale serve 8787` i stället.
 - Servern tillåter max 20 inläsningar per timme (`MAX_EXTRACTIONS_PER_HOUR`) så att en publik länk inte kan dra iväg kostnader. Datorn måste vara igång.
 
+## Ny analys (startsidan)
+
+Ett flöde för en bostad: fyll i uppgifterna från annonsen, ladda upp årsredovisningen (eller sök föreningen på org.nr)
+och få en samlad rapport som kan skrivas ut eller sparas som PDF:
+
+- **Två värden:** *ekonomiskt värde* (föreningens skuld och löpande kostnader omräknade till kronor) och
+  *vad marknaden brukar betala* (kalibrerat mot studier: −2,5 % per 1 000 kr/mån högre avgift enligt Wilhelmsson,
+  KTH 2025; tomträtt −3,6 % centralt / −6,8 % förort enligt Boberg m.fl., KTH 2025; balkong +1,9 % enligt Booli 2024).
+  Skillnaden är det marknaden inte tar betalt för.
+- Månadskostnad idag och om 5 år, bankens KALP, föreningens betyg.
+- Kostnad över tid med stambyte och ny tomträttsavgäld inlagda automatiskt från årsredovisningen.
+
+Kopplingen mellan annons, årsredovisning och beräkningar finns i `web/src/lib/analysis.ts`.
+
 ## Funktioner (v0.1)
 
 | Flik | Innehåll |

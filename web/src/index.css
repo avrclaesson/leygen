@@ -81,3 +81,21 @@ button.link { background: none; border: none; color: var(--accent); cursor: poin
 button.primary:disabled, .org-lookup button:disabled { opacity: 0.5; cursor: not-allowed; }
 .field-input input[type='date'], .field-input input:not([type]) { border: none; padding: 0.5rem; font-size: 1rem; width: 100%; background: transparent; }
 .success code { background: #f0f2f7; padding: 0.1rem 0.3rem; border-radius: 4px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+.tile { background: #fff; border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(20, 30, 60, 0.08); }
+.tile-label { color: #5b6478; font-size: 0.85rem; }
+.tile-value { font-size: 1.2rem; white-space: nowrap; font-weight: 700; margin: 0.25rem 0; }
+.tile-value.good { color: var(--good); }
+.tile-value.bad { color: var(--bad); }
+.tile-sub { color: #6b7488; font-size: 0.8rem; }
+.report { display: flex; flex-direction: column; gap: 1rem; }
+.report-head { display: flex; justify-content: space-between; align-items: center; }
+.report-head h2 { margin: 0.5rem 0; }
+h3.sub { font-size: 0.95rem; margin: 1.25rem 0 0.5rem; }
+tr.total td { font-weight: 700; border-top: 2px solid #1d2433; }
+@media print {
+  .no-print { display: none !important; }
+  body, :root { background: #fff; }
+  main { padding: 0; }
+  .card, .tile { box-shadow: none; border: 1px solid #e2e6ef; break-inside: avoid; }
+}

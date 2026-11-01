@@ -31,6 +31,11 @@ export const ExtractedBrfSchema = z.object({
   genuineHousingCoop: z.boolean().nullable().describe('true om föreningen är ett privatbostadsföretag (äkta BRF), false om oäkta.'),
   buildYear: z.number().nullable().describe('Byggnadsår (första året om flera).'),
   lastPipeRenovation: z.number().nullable().describe('År då stambyte senast genomfördes, om det framgår.'),
+  plannedPipeRenovationYear: z.number().nullable().describe('År då ett kommande stambyte är planerat enligt underhållsplanen/förvaltningsberättelsen.'),
+  plannedPipeRenovationCost: kr('Uppskattad total kostnad för det planerade stambytet.'),
+  groundRent: kr('Tomträttsavgäld per år (0 om föreningen äger marken).'),
+  groundRentRenegotiationYear: z.number().nullable().describe('År då tomträttsavgälden omregleras nästa gång.'),
+  rentalApartmentCount: z.number().nullable().describe('Antal lägenheter upplåtna med hyresrätt (0 om inga).'),
 
   reportedKeyFigures: z
     .object({

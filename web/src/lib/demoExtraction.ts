@@ -22,6 +22,11 @@ export const DEMO_EXTRACTION: ExtractedBrf & { model: string; consistencyIssues:
   genuineHousingCoop: true,
   buildYear: 1961,
   lastPipeRenovation: null,
+  plannedPipeRenovationYear: 2030,
+  plannedPipeRenovationCost: 36_000_000,
+  groundRent: 280_000,
+  groundRentRenegotiationYear: 2031,
+  rentalApartmentCount: 2,
   reportedKeyFigures: { debtPerSqm: 10_233, savingsPerSqm: 43, feePerSqm: 658, interestSensitivityPercent: 16.7 },
   plannedFeeChange: 'Avgiften höjs med 8 % från 1 januari 2026.',
   findings: [
