@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, NumberField, PercentField, Row, setter } from '../components';
+import { Card, CheckField, NumberField, PercentField, Row, Tool, setter } from '../components';
 import { DEFAULT_KALP, maxPrice, saleProceeds, type Household, type Purchase, type Sale } from '../lib/mortgage';
 import { formatKr, formatPct } from '../lib/format';
 import { DEFAULT_HOUSEHOLD, HouseholdFields } from './Kalkyl';
@@ -40,10 +40,22 @@ export default function KopSalj() {
 
   return (
     <div className="page">
+      <Tool
+        result={
+          <section className="card">
+            <p className="summary-title">Du kan köpa för upp till</p>
+            <div className="big">{formatKr(result.maxPrice)}</div>
+            <p className="big-sub">Begränsas av {LIMIT_TEXT[result.limitedBy]}.</p>
+            <Row label="Kontantinsats" value={formatKr(cash)} />
+            <Row label="Bolån" value={formatKr(result.loan)} />
+            <Row label="Belåningsgrad" value={formatPct(result.maxPrice > 0 ? result.loan / result.maxPrice : 0)} />
+            <Row label="KALP vid maxpris" value={formatKr(result.kalp.kalp)} />
+            <p className="hint">Bankerna använder egna kalkylräntor och schabloner, så ta alltid ett lånelöfte.</p>
+          </section>
+        }
+      >
       <Card title="Säljer du en bostad?">
-        <label className="check">
-          <input type="checkbox" checked={sell} onChange={(e) => setSell(e.target.checked)} /> Ja, jag säljer en nuvarande bostad
-        </label>
+        <CheckField label="Ja, jag säljer en nuvarande bostad" value={sell} onChange={setSell} />
         {sell && (
           <>
             <div className="grid">
@@ -54,9 +66,10 @@ export default function KopSalj() {
               <NumberField label="Övriga säljkostnader" value={s.otherCosts} onChange={fs('otherCosts')} step={1000} suffix="kr" />
               <NumberField label="Kvarvarande bolån" value={s.remainingLoan} onChange={fs('remainingLoan')} step={50000} suffix="kr" />
             </div>
-            <label className="check">
-              <input type="checkbox" checked={taxDeferral} onChange={(e) => setTaxDeferral(e.target.checked)} /> Begär uppskov med vinstskatten
-            </label>
+            <div className="checks">
+              <CheckField label="Begär uppskov med vinstskatten" value={taxDeferral} onChange={setTaxDeferral} />
+            </div>
+            <div className="below" />
             <Row label="Kapitalvinst" value={formatKr(sale.gain)} />
             <Row label="Vinstskatt (22 %)" value={formatKr(sale.tax) + (taxDeferral ? ' (uppskov)' : '')} />
             <Row label="Kvar efter lån och skatt" value={formatKr(fromSale)} strong />
@@ -85,16 +98,7 @@ export default function KopSalj() {
           <PercentField label="Bolåneränta" value={base.interestRate} onChange={fb('interestRate')} />
         </div>
       </Card>
-
-      <Card title="Du kan köpa för upp till">
-        <div className="big">{formatKr(result.maxPrice)}</div>
-        <Row label="Tillgänglig kontantinsats" value={formatKr(cash)} />
-        <Row label="Bolån" value={formatKr(result.loan)} />
-        <Row label="Belåningsgrad" value={formatPct(result.maxPrice > 0 ? result.loan / result.maxPrice : 0)} />
-        <Row label="KALP vid maxpris" value={formatKr(result.kalp.kalp)} />
-        <p className="hint">Begränsas av: <strong>{LIMIT_TEXT[result.limitedBy]}</strong>.</p>
-        <p className="hint">Beräkningen är en uppskattning. Bankerna använder egna kalkylräntor och schabloner – ta alltid ett lånelöfte.</p>
-      </Card>
+      </Tool>
     </div>
   );
 }

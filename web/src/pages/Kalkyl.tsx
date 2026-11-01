@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CheckField, NumberField, PercentField, Row, setter } from '../components';
+import { Card, CheckField, NumberField, PercentField, Row, Tool, setter } from '../components';
 import { DEFAULT_KALP, kalp, monthlyCost, sensitivity, transactionCosts, type Household, type Purchase } from '../lib/mortgage';
 import { formatDec, formatKr, formatPct } from '../lib/format';
 
@@ -51,46 +51,54 @@ export default function Kalkyl() {
 
   return (
     <div className="page">
-      <Card title="Bostaden">
-        <div className="grid">
-          <label className="field">
-            <span className="field-label">Typ</span>
-            <select value={p.type} onChange={(e) => fp('type')(e.target.value as Purchase['type'])}>
-              <option value="bostadsratt">Bostadsrätt</option>
-              <option value="villa">Villa / äganderätt</option>
-            </select>
-          </label>
-          <NumberField label="Pris" value={p.price} onChange={fp('price')} step={50000} suffix="kr" />
-          <NumberField label="Kontantinsats" value={p.cash} onChange={fp('cash')} step={10000} suffix="kr" />
-          <NumberField label="Månadsavgift" value={p.monthlyFee} onChange={fp('monthlyFee')} step={100} suffix="kr" />
-          <NumberField label="Drift (el, värme, försäkring) / mån" value={p.operatingMonthly} onChange={fp('operatingMonthly')} step={100} suffix="kr" />
-          <PercentField label="Bolåneränta" value={p.interestRate} onChange={fp('interestRate')} />
-        </div>
-      </Card>
-
-      <Card title="Hushållet">
-        <HouseholdFields h={h} setH={setH} />
-      </Card>
-
-      <div className="two-col">
-        <Card title="Månadskostnad (verklig ränta)">
-          <Row label="Bolån" value={formatKr(cost.loan)} />
-          <Row label="Belåningsgrad" value={formatPct(cost.ltv)} />
-          <Row label={`Ränta (${formatPct(p.interestRate)})`} value={formatKr(cost.interest)} />
-          <Row label="Ränta efter ränteavdrag" value={formatKr(cost.interestAfterDeduction)} />
-          <Row label={`Amortering (${formatPct(cost.amortizationRate)}/år)`} value={formatKr(cost.amortization)} />
-          <Row label="Avgift + drift" value={formatKr(cost.fee + cost.operating)} />
-          <Row label="Totalt per månad" value={formatKr(cost.total)} strong />
-          <Row label="Varav kostnad (exkl. amortering)" value={formatKr(cost.totalExclAmortization)} />
-          <Row label="Engångskostnader vid köp" value={formatKr(tx)} />
+      <Tool
+        result={
+          <>
+            <section className="card">
+              <p className="summary-title">Per månad</p>
+              <div className="big">{formatKr(cost.total)}</div>
+              <p className="big-sub">varav kostnad {formatKr(cost.totalExclAmortization)}, resten är amortering</p>
+              <Row label="Bolån" value={formatKr(cost.loan)} />
+              <Row label="Belåningsgrad" value={formatPct(cost.ltv)} />
+              <Row label={`Ränta (${formatPct(p.interestRate)})`} value={formatKr(cost.interest)} />
+              <Row label="Ränta efter ränteavdrag" value={formatKr(cost.interestAfterDeduction)} />
+              <Row label={`Amortering (${formatPct(cost.amortizationRate)}/år)`} value={formatKr(cost.amortization)} />
+              <Row label="Avgift + drift" value={formatKr(cost.fee + cost.operating)} />
+              <Row label="Engångskostnader vid köp" value={formatKr(tx)} />
+            </section>
+            <section className="card">
+              <p className="summary-title">Bankens kalkyl (KALP)</p>
+              <div className={`big small ${k.approved ? 'good' : 'bad'}`}>{k.approved ? 'Godkänd' : 'Underkänd'}</div>
+              <p className="big-sub">Kvar att leva på {formatKr(k.kalp)}/mån</p>
+              <Row label="KALP ≥ 0" value={ok(k.approvedByKalp)} />
+              <Row label={`Kontantinsats ≥ ${formatKr(k.cashRequired)}`} value={ok(k.approvedByLtv)} />
+              <Row label={`Skuldkvot ${formatDec(k.debtToIncome)} ≤ ${opts.maxDebtToIncome}`} value={ok(k.approvedByDti)} />
+            </section>
+          </>
+        }
+      >
+        <Card title="Bostaden">
+          <div className="grid">
+            <label className="field">
+              <span className="field-label">Typ</span>
+              <select value={p.type} onChange={(e) => fp('type')(e.target.value as Purchase['type'])}>
+                <option value="bostadsratt">Bostadsrätt</option>
+                <option value="villa">Villa / äganderätt</option>
+              </select>
+            </label>
+            <NumberField label="Pris" value={p.price} onChange={fp('price')} step={50000} suffix="kr" />
+            <NumberField label="Kontantinsats" value={p.cash} onChange={fp('cash')} step={10000} suffix="kr" />
+            <NumberField label="Månadsavgift" value={p.monthlyFee} onChange={fp('monthlyFee')} step={100} suffix="kr" />
+            <NumberField label="Drift per månad" value={p.operatingMonthly} onChange={fp('operatingMonthly')} step={100} suffix="kr" hint="El, värme, försäkring" />
+            <PercentField label="Bolåneränta" value={p.interestRate} onChange={fp('interestRate')} />
+          </div>
         </Card>
 
-        <Card title="KALP – kvar att leva på (bankens kalkyl)">
-          <div className="grid compact">
-            <PercentField label="Kalkylränta" value={opts.stressRate} onChange={fo('stressRate')} />
-            <NumberField label="Max skuldkvot" value={opts.maxDebtToIncome} onChange={fo('maxDebtToIncome')} step={0.5} suffix="ggr" />
-          </div>
-          <CheckField label="Räkna med ränteavdrag" value={opts.includeDeduction} onChange={fo('includeDeduction')} />
+        <Card title="Hushållet">
+          <HouseholdFields h={h} setH={setH} />
+        </Card>
+
+        <Card title="Så räknar banken">
           <Row label="Nettoinkomst" value={formatKr(k.income)} />
           <Row label="− Ränta på kalkylränta" value={formatKr(k.stressedInterest)} />
           <Row label="− Amortering" value={formatKr(k.amortization)} />
@@ -98,14 +106,21 @@ export default function Kalkyl() {
           <Row label="− Levnadskostnader (schablon)" value={formatKr(k.living)} />
           <Row label="− Övriga lån" value={formatKr(k.otherDebt)} />
           <Row label="Kvar att leva på" value={<span className={k.kalp >= 0 ? 'good' : 'bad'}>{formatKr(k.kalp)}</span>} strong />
-          <Row label="KALP ≥ 0" value={ok(k.approvedByKalp)} />
-          <Row label={`Kontantinsats ≥ ${formatKr(k.cashRequired)}`} value={ok(k.approvedByLtv)} />
-          <Row label={`Skuldkvot ${formatDec(k.debtToIncome)} ≤ ${opts.maxDebtToIncome}`} value={ok(k.approvedByDti)} />
+          <details>
+            <summary>Ändra bankens antaganden</summary>
+            <div className="grid compact">
+              <PercentField label="Kalkylränta" value={opts.stressRate} onChange={fo('stressRate')} />
+              <NumberField label="Max skuldkvot" value={opts.maxDebtToIncome} onChange={fo('maxDebtToIncome')} step={0.5} suffix="ggr" />
+            </div>
+            <div className="checks">
+              <CheckField label="Räkna med ränteavdrag" value={opts.includeDeduction} onChange={fo('includeDeduction')} />
+            </div>
+          </details>
         </Card>
-      </div>
+      </Tool>
 
-      <Card title="Känslighetsanalys – månadskostnad vid olika räntor och avgiftshöjningar">
-        <table className="table">
+      <Card title="Månadskostnad vid olika räntor och avgiftshöjningar">
+        <table className="table heat">
           <thead>
             <tr>
               <th>Ränta \ Avgift</th>
@@ -119,7 +134,7 @@ export default function Kalkyl() {
               <tr key={r}>
                 <th>{formatPct(r)}</th>
                 {sens.cells[i].map((c, j) => (
-                  <td key={j} className={c > h.netIncomeMonthly * 0.4 ? 'bad' : c > h.netIncomeMonthly * 0.3 ? 'warn' : ''}>
+                  <td key={j} className={`nowrap ${c > h.netIncomeMonthly * 0.4 ? 'bad' : c > h.netIncomeMonthly * 0.3 ? 'warn' : ''}`}>
                     {formatKr(c)}
                   </td>
                 ))}
