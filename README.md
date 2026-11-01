@@ -22,7 +22,7 @@ Servern kräver Node 22.18+ (kör TypeScript direkt).
 1. Pages för privata repon kräver GitHub Pro/Team. Annars: gör repot publikt.
 2. Settings → Pages → Source: **GitHub Actions**.
 3. Merga till `main` (eller kör workflowen *Deploy demo to GitHub Pages* manuellt).
-4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under Granska BRF finns "Visa ett exempel" i stället för uppladdning.
+4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under FÃ¶rening finns "Visa ett exempel" i stället för uppladdning.
 
 **Alternativ B – Tailscale Funnel (hela appen, från din dator)**
 ```bash
@@ -60,11 +60,11 @@ Kopplingen mellan annons, årsredovisning och beräkningar finns i `web/src/lib/
 |---|---|
 | **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP-kalkyl med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell för ränta × avgiftshöjning. |
 | **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling, med info om vad som begränsar (insats, KALP eller skuldkvot). |
-| **Granska BRF** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+| **FÃ¶rening** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
 
 ### Läs in årsredovisning (AI)
 
-Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
+Ladda upp föreningens årsredovisning som PDF under **FÃ¶rening**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
 
 - alla fält i BRF-analysen (ytor, skulder, avgifter, resultat, avskrivningar, underhåll, energi, kassa, tomträtt, byggår, stambyte),
 - genomsnittlig ränta och lån som ska omförhandlas inom 12 månader,
