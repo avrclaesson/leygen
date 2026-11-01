@@ -46,6 +46,12 @@ och få en samlad rapport som kan skrivas ut eller sparas som PDF:
 - Månadskostnad idag och om 5 år, bankens KALP, föreningens betyg.
 - Kostnad över tid med stambyte och ny tomträttsavgäld inlagda automatiskt från årsredovisningen.
 
+- **Motståndskraft vid nedgång:** tre scenarier (mild, som 2022–23, djup kris som 90-talet) där värdeförändringen
+  delas upp i marknaden (regionens prisfall från toppen 2022 enligt Mäklarstatistik), prissegment (billigare
+  kvm-pris svänger mer – antagande, svenska data saknas), och föreningen (skuld utöver områdets nivå ⇒ större
+  avgiftshöjning när räntan stiger ⇒ större prisfall). Visar också belåningsgrad och månadskostnad i scenariot.
+  Logik: `web/src/lib/resilience.ts`.
+
 Kopplingen mellan annons, årsredovisning och beräkningar finns i `web/src/lib/analysis.ts`.
 
 ## Funktioner (v0.1)

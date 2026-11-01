@@ -17,7 +17,8 @@ import { analyzeBrf } from '../lib/brf';
 import { kalp, monthlyCost, type Household } from '../lib/mortgage';
 import { rateShock, simulate } from '../lib/projection';
 import { MARKET_CENTRAL, MARKET_SUBURB, valuate, valuateMarket } from '../lib/valuation';
-import { formatDec, formatKr, formatNum } from '../lib/format';
+import { formatDec, formatKr, formatNum, formatPct } from '../lib/format';
+import { REGIONS, resilience } from '../lib/resilience';
 
 const round10k = (n: number) => Math.round(n / 10_000) * 10_000;
 const signed = (n: number) => (Math.abs(n) < 1 ? '–' : `${n > 0 ? '+' : '−'}${formatKr(Math.abs(n))}`);
@@ -52,6 +53,9 @@ export default function NyAnalys() {
   const [a, setA] = useState<Association>(DEFAULT_ASSOCIATION);
   const [h, setH] = useState<Household>(DEFAULT_HOUSEHOLD);
   const [extracted, setExtracted] = useState<ExtractionResult | null>(null);
+  const [regionId, setRegionId] = useState('stockholm');
+  const [municipalMedian, setMunicipalMedian] = useState(55_000);
+  const [segmentSensitivity, setSegmentSensitivity] = useState(0.5);
   const fl = setter(l, setL);
   const fa = setter(a, setA);
 
@@ -67,6 +71,22 @@ export default function NyAnalys() {
   const brfIn = extracted ? brfInputFromExtraction(extracted) : null;
   const brf = brfIn ? analyzeBrf(brfIn) : null;
   const in5 = projection[5];
+  const region = REGIONS.find((r) => r.id === regionId)!;
+  const res = resilience({
+    price: l.price,
+    area: l.area,
+    loan: cost.loan,
+    ownRate: l.interestRate,
+    monthlyFee: l.monthlyFee,
+    region,
+    priceRatio: municipalMedian > 0 && l.area > 0 ? l.price / l.area / municipalMedian : 1,
+    segmentSensitivity,
+    debtPerSqm: a.debtPerSqm,
+    areaDebtPerSqm: a.areaDebtPerSqm,
+    brfBindingYears: a.brfBindingYears,
+    perThousandMonthly: -0.025,
+  });
+  const ratingText = { better: 'Bättre än området', same: 'Som området', worse: 'Sämre än området' }[res.rating];
 
   const keys = [...new Set([...economic.adjustments, ...market.adjustments].map((x) => x.key))];
   const label = (key: string) => (economic.adjustments.find((x) => x.key === key) ?? market.adjustments.find((x) => x.key === key))!.label;
@@ -94,6 +114,13 @@ export default function NyAnalys() {
                 <option value="suburb">Förort</option>
               </select>
             </label>
+            <label className="field">
+              <span className="field-label">Kommun</span>
+              <select value={regionId} onChange={(e) => setRegionId(e.target.value)}>
+                {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
+              </select>
+            </label>
+            <NumberField label="Kommunens snittpris" value={municipalMedian} onChange={setMunicipalMedian} step={1000} suffix="kr/kvm" hint="Snitt för bostadsrätter i hela kommunen (Mäklarstatistik)" />
             <NumberField label="Din kontantinsats" value={l.cash} onChange={fl('cash')} step={10000} suffix="kr" />
             <PercentField label="Din bolåneränta" value={l.interestRate} onChange={fl('interestRate')} />
           </div>
@@ -189,6 +216,12 @@ export default function NyAnalys() {
             sub={<>Kvar att leva på {formatKr(k.kalp)}</>}
             tone={k.approved ? 'good' : 'bad'}
           />
+ <Tile
+            label="Motståndskraft vid nedgång"
+            value={ratingText}
+            sub={<>Som 2022: {formatPct(res.results[1].total)} (området {formatPct(region.drop2022)})</>}
+            tone={res.rating === 'better' ? 'good' : res.rating === 'worse' ? 'bad' : undefined}
+          />
           {brf && <Tile label="Föreningens betyg" value={`${brf.score} / 100`} tone={brf.score >= 60 ? 'good' : brf.score < 40 ? 'bad' : undefined} />}
         </div>
 
@@ -225,6 +258,65 @@ export default function NyAnalys() {
             Inkl. amortering, avgift och drift; efter ränteavdrag.
             {projIn.events.length > 0 && <> Inräknat: {projIn.events.map((e) => `${e.label.toLowerCase()} år ${e.year}`).join(', ')}.</>}
           </p>
+        </Card>
+
+        <Card title="Motståndskraft vid nedgång">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th className="num">Marknaden</th>
+                <th className="num">Prissegment</th>
+                <th className="num">Föreningen</th>
+                <th className="num">Totalt</th>
+                <th className="num">Värde efter</th>
+                <th className="num">Belåningsgrad</th>
+                <th className="num">Månadskostnad</th>
+              </tr>
+            </thead>
+            <tbody>
+              {res.results.map((r) => (
+                <tr key={r.scenario.id}>
+                  <td>
+                    {r.scenario.label}
+                    <br />
+                    <small className="hint">Ränta +{formatDec(r.scenario.rateShock * 100)} pe · återhämtning {r.scenario.recovery}</small>
+                  </td>
+                  <td className="num">{formatPct(r.market)}</td>
+                  <td className="num">{Math.abs(r.segment) < 0.0005 ? '–' : formatPct(r.segment)}</td>
+                  <td className="num">{Math.abs(r.association) < 0.0005 ? '–' : formatPct(r.association)}</td>
+                  <td className="num"><strong>{formatPct(r.total)}</strong></td>
+                  <td className="num">{formatKr(round10k(r.valueAfter))}</td>
+                  <td className={`num ${r.ltvAfter > 1 ? 'bad' : ''}`}>{formatPct(r.ltvAfter)}</td>
+                  <td className="num">+{formatKr(r.monthlyIncrease)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <ul className="facts">
+            <li>
+              <strong>Marknaden:</strong> {region.label} föll {formatPct(Math.abs(region.drop2022))} från toppen 2022 (Svensk Mäklarstatistik). Djup kris
+              antas bli 1,5 gånger så stor – villapriserna föll ca 21 % på 90-talet.
+            </li>
+            <li>
+              <strong>Prissegment:</strong> kvm-priset är {formatDec((l.price / l.area / municipalMedian) * 100)} % av kommunens snitt. Billigare bostäder
+              har svängt mer i amerikanska data; svenska data per segment saknas, så känsligheten är ett antagande.
+            </li>
+            <li>
+              <strong>Föreningen:</strong> skulden jämfört med områdets typiska nivå avgör hur mycket mer (eller mindre) avgiften stiger när räntan
+              går upp, och höjningen prisas in med ca 2,5 % per 1 000 kr/mån (Wilhelmsson, KTH 2025).
+            </li>
+            <li>
+              <strong>Månadskostnad:</strong> ökning för ditt bolån (efter ränteavdrag) och avgiften inom ca två år. Belåningsgrad över 100 % betyder att
+              lånet är större än bostadens värde.
+            </li>
+          </ul>
+          <details className="no-print">
+            <summary>Ändra antagande om prissegment</summary>
+            <div className="grid">
+              <PercentField label="Känslighet för prissegment" value={segmentSensitivity} onChange={setSegmentSensitivity} hint="50 % ⇒ en bostad 30 % billigare än snittet faller 15 % mer" />
+            </div>
+          </details>
         </Card>
 
         {brf && (
