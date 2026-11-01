@@ -40,6 +40,20 @@ Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/
 
 **Mät kvaliteten:** lägg årsredovisningar och handkontrollerade facit-filer i `web/eval/reports/` och kör `npm run eval -- claude-haiku-5-5 claude-opus-5-5`. Se `web/eval/run.ts`.
 
+### Värdering (Värdering-fliken)
+
+Utgår från områdets kvm-pris för en "normal" lägenhet och justerar i kronor för det som är svårt att prisa in:
+föreningens skuld (krona för krona), avgift exkl. räntedel (kapitaliserad), direktverkande el, kommande stambyte,
+höjd tomträttsavgäld, hyresrätter som kan säljas, samt bottenvåning/balkong/hiss (tumregler). Löpande kostnader
+kapitaliseras med en diskonteringsränta (5 % ⇒ 100 kr/mån ≈ 24 000 kr). Logik: `web/src/lib/valuation.ts`.
+
+### Kostnad över tid (Kostnad över tid-fliken)
+
+Monte Carlo-simulering (2 000 räntebanor) av månadskostnaden 10 år framåt, visad som median och 10–90-percentil.
+Räntan slår både på det egna lånet och – med fördröjning enligt föreningens bindningstid – på avgiften via
+föreningens lån. Kända händelser (stambyte som ökar föreningens skuld, höjd tomträttsavgäld) läggs in per år.
+Logik: `web/src/lib/projection.ts`.
+
 All beräkningslogik ligger i `web/src/lib/` som rena funktioner och är testad (`npm test`).
 
 ### Regler som används (från 1 april 2026)

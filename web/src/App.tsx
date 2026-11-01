@@ -2,11 +2,15 @@ import { useState } from 'react';
 import Kalkyl from './pages/Kalkyl';
 import KopSalj from './pages/KopSalj';
 import Brf from './pages/Brf';
+import Framtid from './pages/Framtid';
+import Varde from './pages/Varde';
 
 const TABS = [
   { id: 'kalkyl', label: 'Månadskostnad & KALP', component: Kalkyl },
   { id: 'kopsalj', label: 'Vad har jag råd med?', component: KopSalj },
   { id: 'brf', label: 'Granska BRF', component: Brf },
+  { id: 'varde', label: 'Värdering', component: Varde },
+  { id: 'framtid', label: 'Kostnad över tid', component: Framtid },
 ] as const;
 
 export default function App() {
