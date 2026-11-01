@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "server": "node --watch server/index.ts",
-    "start": "node server/index.ts"
+    "start": "node server/index.ts",
+    "eval": "node eval/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.3.0",

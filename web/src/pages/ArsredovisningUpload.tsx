@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { FIELD_LABELS, type ExtractedBrf } from '../lib/brfExtraction';
+import { FIELD_LABELS, type ConsistencyIssue, type ExtractedBrf } from '../lib/brfExtraction';
+
+export type ExtractionResult = ExtractedBrf & { model: string; consistencyIssues: ConsistencyIssue[] };
 
 type State =
   | { kind: 'idle' }
   | { kind: 'loading'; fileName: string }
   | { kind: 'error'; message: string }
-  | { kind: 'done'; data: ExtractedBrf };
+  | { kind: 'done'; data: ExtractionResult };
 
 const SEVERITY_ICON = { info: 'ℹ️', warning: '⚠️', critical: '🛑' } as const;
 
@@ -26,8 +28,8 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
       });
       const body = await res.json().catch(() => ({ error: `Servern svarade ${res.status}.` }));
       if (!res.ok) throw new Error(body.error ?? `Servern svarade ${res.status}.`);
-      setState({ kind: 'done', data: body as ExtractedBrf });
-      onExtracted(body as ExtractedBrf);
+      setState({ kind: 'done', data: body as ExtractionResult });
+      onExtracted(body as ExtractionResult);
     } catch (err) {
       setState({ kind: 'error', message: err instanceof Error ? err.message : String(err) });
     }
@@ -73,7 +75,7 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
   );
 }
 
-function ExtractionSummary({ data }: { data: ExtractedBrf }) {
+function ExtractionSummary({ data }: { data: ExtractionResult }) {
   const r = data.reportedKeyFigures;
   const reported = [
     ['Skuldsättning/kvm', r.debtPerSqm, 'kr'],
@@ -115,6 +117,16 @@ function ExtractionSummary({ data }: { data: ExtractedBrf }) {
               <li key={i} className={`finding ${f.severity}`}>
                 {SEVERITY_ICON[f.severity]} {f.text}
               </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {data.consistencyIssues.length > 0 && (
+        <>
+          <h3>Kontrollera dessa värden</h3>
+          <ul className="warnings">
+            {data.consistencyIssues.map((c, i) => (
+              <li key={i}>🔎 {c.message}</li>
             ))}
           </ul>
         </>

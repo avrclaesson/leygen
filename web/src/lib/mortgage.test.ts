@@ -169,3 +169,30 @@ describe('brf extraction merge', async () => {
     expect(filled).not.toContain('energyCosts');
   });
 });
+
+describe('brf extraction consistency', async () => {
+  const { checkConsistency } = await import('./brfExtraction');
+  const base = {
+    associationName: null, orgNumber: null, fiscalYear: null,
+    residentialArea: 4000, otherArea: 0, apartmentCount: null,
+    interestBearingDebt: 24_000_000, yearlyFees: 3_000_000, totalRevenue: 3_200_000, netResult: 0,
+    depreciation: 0, plannedMaintenance: 0, energyCosts: 0, cash: 0,
+    averageInterestRate: 0.03, debtMaturingWithin12Months: null,
+    leasehold: null, genuineHousingCoop: null, buildYear: null, lastPipeRenovation: null,
+    reportedKeyFigures: { debtPerSqm: 6000, savingsPerSqm: null, feePerSqm: 750, interestSensitivityPercent: null },
+    plannedFeeChange: null, findings: [], uncertainFields: [],
+  };
+
+  it('accepts consistent values', () => {
+    expect(checkConsistency(base)).toEqual([]);
+  });
+
+  it('detects tkr not converted to kr', () => {
+    const issues = checkConsistency({ ...base, interestBearingDebt: 24_000, yearlyFees: 3_000, totalRevenue: 3_200 });
+    expect(issues.map((i) => i.field)).toEqual(expect.arrayContaining(['interestBearingDebt', 'yearlyFees']));
+  });
+
+  it('detects fees larger than revenue', () => {
+    expect(checkConsistency({ ...base, totalRevenue: 1_000_000 }).some((i) => i.message.includes('intäkterna'))).toBe(true);
+  });
+});

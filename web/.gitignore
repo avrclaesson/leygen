@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Årsredovisningar för eval (kan innehålla uppgifter man inte vill publicera)
+eval/reports/*.pdf

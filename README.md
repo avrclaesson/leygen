@@ -34,7 +34,11 @@ Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`
 - beslutade avgiftsändringar och en lista med iakttagelser för köpare (stambyte, ränteförfall, tvister, revisorns anmärkningar m.m.),
 - vilka värden som är osäkra/tolkade.
 
-Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/brfExtractionSchema.ts`. Server-side fallback (`fallbacks: "default"`) är påslaget så att ett eventuellt avböjande körs om på en annan modell. Kostnad: grovt 1–3 kr per årsredovisning, beroende på antal sidor.
+Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/brfExtractionSchema.ts` och instruktionerna (var varje uppgift finns, tkr→kr, vilken kolumn) i `web/server/extractBrf.ts`.
+
+**Modellval:** Claude Haiku 5.5 körs först (`BRF_MODEL`). Resultatet går igenom en rimlighetskontroll (`checkConsistency`): beräknad skuld/kvm och avgift/kvm jämförs med föreningens egna nyckeltal, och orimliga storlekar (t.ex. tkr som inte räknats om) flaggas. Om Haiku avböjer, svarar ogiltigt eller inte klarar kontrollen körs dokumentet om med Claude Opus 5.5 (`BRF_ESCALATION_MODEL`, sätt till tom sträng för att stänga av). Kvarstående avvikelser visas för användaren.
+
+**Mät kvaliteten:** lägg årsredovisningar och handkontrollerade facit-filer i `web/eval/reports/` och kör `npm run eval -- claude-haiku-5-5 claude-opus-5-5`. Se `web/eval/run.ts`.
 
 All beräkningslogik ligger i `web/src/lib/` som rena funktioner och är testad (`npm test`).
 
