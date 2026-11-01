@@ -7,10 +7,14 @@ En webbapp som hjälper dig att räkna på, jämföra och granska bostäder inna
 ```bash
 cd web
 npm install
-npm run dev     # startar utvecklingsservern
-npm test        # kör enhetstesterna för beräkningarna
-npm run build   # produktionsbygge
+export ANTHROPIC_API_KEY=sk-ant-...   # krävs för inläsning av årsredovisningar
+npm run server  # API-server på :8787 (i en terminal)
+npm run dev     # gränssnittet på :5173, proxar /api till servern (i en annan)
+npm test        # enhetstester
+npm run build && npm start   # produktion: servern serverar även dist/
 ```
+
+Servern kräver Node 22.18+ (kör TypeScript direkt).
 
 ## Funktioner (v0.1)
 
@@ -19,6 +23,18 @@ npm run build   # produktionsbygge
 | **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP-kalkyl med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell för ränta × avgiftshöjning. |
 | **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling, med info om vad som begränsar (insats, KALP eller skuldkvot). |
 | **Granska BRF** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+
+### Läs in årsredovisning (AI)
+
+Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
+
+- alla fält i BRF-analysen (ytor, skulder, avgifter, resultat, avskrivningar, underhåll, energi, kassa, tomträtt, byggår, stambyte),
+- genomsnittlig ränta och lån som ska omförhandlas inom 12 månader,
+- föreningens egna nyckeltal (för kontroll mot våra beräkningar),
+- beslutade avgiftsändringar och en lista med iakttagelser för köpare (stambyte, ränteförfall, tvister, revisorns anmärkningar m.m.),
+- vilka värden som är osäkra/tolkade.
+
+Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/brfExtractionSchema.ts`. Server-side fallback (`fallbacks: "default"`) är påslaget så att ett eventuellt avböjande körs om på en annan modell. Kostnad: grovt 1–3 kr per årsredovisning, beroende på antal sidor.
 
 All beräkningslogik ligger i `web/src/lib/` som rena funktioner och är testad (`npm test`).
 
@@ -65,7 +81,7 @@ Inte något öppet idag. Booli hade tidigare ett API för utvecklare (api.booli.
 ## Idéer på fler funktioner
 
 **Hög prioritet**
-1. **AI-läsning av årsredovisning** – ladda upp PDF:en, extrahera nyckeltalen och fyll i BRF-analysen automatiskt. Flagga även underhållsplan, stambyte, ränteförfall och avgiftshöjningar som nämns i förvaltningsberättelsen.
+1. ~~AI-läsning av årsredovisning~~ ✅ Nästa steg: jämför flera års redovisningar (trend i skuld/sparande), läs även ekonomisk plan och stadgar.
 2. **Budtak** – sätt ett tak innan visningen: "vid X kr blir min månadskostnad Y och KALP Z".
 3. **Köpa före sälja / brygglån** – dubbla boendekostnader och brygglånets kostnad om försäljningen drar ut.
 4. **Jämför bostäder sida vid sida** – månadskostnad, verkligt pris/kvm, BRF-betyg.

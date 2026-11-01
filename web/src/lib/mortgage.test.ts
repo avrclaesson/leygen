@@ -136,3 +136,36 @@ describe('brf', () => {
     expect(effectivePrice(3_000_000, 60, 5_000).effectivePrice).toBe(3_300_000);
   });
 });
+
+describe('brf extraction merge', async () => {
+  const { mergeExtracted } = await import('./brfExtraction');
+  const { ExtractedBrfSchema } = await import('./brfExtractionSchema');
+  const current = {
+    residentialArea: 1, otherArea: 2, interestBearingDebt: 3, yearlyFees: 4, totalRevenue: 5, netResult: 6,
+    depreciation: 7, plannedMaintenance: 8, energyCosts: 9, cash: 10, leasehold: false, genuineHousingCoop: true,
+  };
+  const extracted = ExtractedBrfSchema.parse({
+    associationName: 'Brf Test', orgNumber: '769600-0000', fiscalYear: '2025',
+    residentialArea: 4200, otherArea: null, apartmentCount: 60,
+    interestBearingDebt: 28_000_000, yearlyFees: null, totalRevenue: 3_400_000, netResult: -350_000,
+    depreciation: 1_100_000, plannedMaintenance: 0, energyCosts: null, cash: 1_200_000,
+    averageInterestRate: 0.032, debtMaturingWithin12Months: 5_000_000,
+    leasehold: true, genuineHousingCoop: null, buildYear: 1962, lastPipeRenovation: null,
+    reportedKeyFigures: { debtPerSqm: 6222, savingsPerSqm: null, feePerSqm: 738, interestSensitivityPercent: 9 },
+    plannedFeeChange: null, findings: [{ severity: 'warning', text: 'Stambyte planerat 2027' }], uncertainFields: [],
+  });
+
+  it('fills found values and keeps missing ones', () => {
+    const { input, filled } = mergeExtracted(current, extracted);
+    expect(input.residentialArea).toBe(4200);
+    expect(input.otherArea).toBe(2);
+    expect(input.yearlyFees).toBe(4);
+    expect(input.plannedMaintenance).toBe(0);
+    expect(input.leasehold).toBe(true);
+    expect(input.genuineHousingCoop).toBe(true);
+    expect(input.buildYear).toBe(1962);
+    expect(mergeExtracted({ ...current, lastPipeRenovation: 2008 }, extracted).input.lastPipeRenovation).toBeUndefined();
+    expect(filled).toContain('interestBearingDebt');
+    expect(filled).not.toContain('energyCosts');
+  });
+});

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Card, CheckField, NumberField, Row, setter } from '../components';
 import { analyzeBrf, effectivePrice, type BrfInput, type Rating } from '../lib/brf';
 import { formatDec, formatKr, formatNum } from '../lib/format';
+import { mergeExtracted } from '../lib/brfExtraction';
+import { ArsredovisningUpload } from './ArsredovisningUpload';
 
 const RATING_LABEL: Record<Rating, string> = { good: 'Bra', ok: 'Okej', bad: 'Varning' };
 
@@ -24,30 +26,43 @@ export default function Brf() {
   });
   const [price, setPrice] = useState(3_200_000);
   const [area, setArea] = useState(58);
+  const [filled, setFilled] = useState<Set<keyof BrfInput>>(new Set());
   const f = setter(b, setB);
+  const mark = (key: keyof BrfInput) => (filled.has(key) ? 'autofilled' : undefined);
   const a = analyzeBrf(b);
   const debtRes = a.metrics.find((m) => m.key === 'debtPerResidentialSqm')!.value;
   const eff = effectivePrice(price, area, debtRes);
 
   return (
     <div className="page">
+      <Card title="Läs in årsredovisning">
+        <ArsredovisningUpload
+          onExtracted={(data) => {
+            const { input, filled } = mergeExtracted(b, data);
+            setB(input);
+            setFilled(new Set(filled));
+          }}
+        />
+      </Card>
+
       <Card title="Uppgifter från årsredovisningen">
+        {filled.size > 0 && <p className="hint"><span className="autofilled-chip">Blå</span> fält är ifyllda automatiskt – dubbelkolla gärna.</p>}
         <p className="hint">
           Hittas i förvaltningsberättelsen (flerårsöversikt med nyckeltal), resultaträkningen, balansräkningen och noterna.
         </p>
         <div className="grid">
-          <NumberField label="Boyta bostadsrätter" value={b.residentialArea} onChange={f('residentialArea')} step={100} suffix="kvm" />
-          <NumberField label="Lokaler + hyresrätter" value={b.otherArea} onChange={f('otherArea')} step={50} suffix="kvm" />
-          <NumberField label="Räntebärande skulder" value={b.interestBearingDebt} onChange={f('interestBearingDebt')} step={100000} suffix="kr" />
-          <NumberField label="Årsavgifter (totalt)" value={b.yearlyFees} onChange={f('yearlyFees')} step={10000} suffix="kr" />
-          <NumberField label="Rörelseintäkter (totalt)" value={b.totalRevenue} onChange={f('totalRevenue')} step={10000} suffix="kr" />
-          <NumberField label="Årets resultat" value={b.netResult} onChange={f('netResult')} step={10000} suffix="kr" />
-          <NumberField label="Avskrivningar" value={b.depreciation} onChange={f('depreciation')} step={10000} suffix="kr" />
-          <NumberField label="Planerat underhåll (kostnadsfört)" value={b.plannedMaintenance} onChange={f('plannedMaintenance')} step={10000} suffix="kr" />
-          <NumberField label="Energikostnader (värme, el, vatten)" value={b.energyCosts} onChange={f('energyCosts')} step={10000} suffix="kr" />
-          <NumberField label="Likvida medel" value={b.cash} onChange={f('cash')} step={10000} suffix="kr" />
-          <NumberField label="Byggår" value={b.buildYear ?? 0} onChange={(v) => f('buildYear')(v || undefined)} />
-          <NumberField label="Senaste stambyte (år)" value={b.lastPipeRenovation ?? 0} onChange={(v) => f('lastPipeRenovation')(v || undefined)} />
+          <NumberField className={mark('residentialArea')} label="Boyta bostadsrätter" value={b.residentialArea} onChange={f('residentialArea')} step={100} suffix="kvm" />
+          <NumberField className={mark('otherArea')} label="Lokaler + hyresrätter" value={b.otherArea} onChange={f('otherArea')} step={50} suffix="kvm" />
+          <NumberField className={mark('interestBearingDebt')} label="Räntebärande skulder" value={b.interestBearingDebt} onChange={f('interestBearingDebt')} step={100000} suffix="kr" />
+          <NumberField className={mark('yearlyFees')} label="Årsavgifter (totalt)" value={b.yearlyFees} onChange={f('yearlyFees')} step={10000} suffix="kr" />
+          <NumberField className={mark('totalRevenue')} label="Rörelseintäkter (totalt)" value={b.totalRevenue} onChange={f('totalRevenue')} step={10000} suffix="kr" />
+          <NumberField className={mark('netResult')} label="Årets resultat" value={b.netResult} onChange={f('netResult')} step={10000} suffix="kr" />
+          <NumberField className={mark('depreciation')} label="Avskrivningar" value={b.depreciation} onChange={f('depreciation')} step={10000} suffix="kr" />
+          <NumberField className={mark('plannedMaintenance')} label="Planerat underhåll (kostnadsfört)" value={b.plannedMaintenance} onChange={f('plannedMaintenance')} step={10000} suffix="kr" />
+          <NumberField className={mark('energyCosts')} label="Energikostnader (värme, el, vatten)" value={b.energyCosts} onChange={f('energyCosts')} step={10000} suffix="kr" />
+          <NumberField className={mark('cash')} label="Likvida medel" value={b.cash} onChange={f('cash')} step={10000} suffix="kr" />
+          <NumberField className={mark('buildYear')} label="Byggår" value={b.buildYear ?? 0} onChange={(v) => f('buildYear')(v || undefined)} />
+          <NumberField className={mark('lastPipeRenovation')} label="Senaste stambyte (år)" value={b.lastPipeRenovation ?? 0} onChange={(v) => f('lastPipeRenovation')(v || undefined)} />
         </div>
         <CheckField label="Tomträtt (föreningen äger inte marken)" value={b.leasehold} onChange={f('leasehold')} />
         <CheckField label="Äkta bostadsrättsförening" value={b.genuineHousingCoop} onChange={f('genuineHousingCoop')} />

@@ -7,11 +7,12 @@ interface NumberFieldProps {
   step?: number;
   suffix?: string;
   hint?: string;
+  className?: string;
 }
 
-export function NumberField({ label, value, onChange, step = 1, suffix, hint }: NumberFieldProps) {
+export function NumberField({ label, value, onChange, step = 1, suffix, hint, className }: NumberFieldProps) {
   return (
-    <label className="field">
+    <label className={className ? `field ${className}` : 'field'}>
       <span className="field-label">{label}</span>
       <span className="field-input">
         <input
@@ -28,7 +29,7 @@ export function NumberField({ label, value, onChange, step = 1, suffix, hint }: 
 }
 
 /** Procentfält: visar procent men lagrar andel (0.03 = 3 %). */
-export function PercentField({ label, value, onChange, hint }: Omit<NumberFieldProps, 'step' | 'suffix'>) {
+export function PercentField({ label, value, onChange, hint }: Omit<NumberFieldProps, 'step' | 'suffix' | 'className'>) {
   return (
     <NumberField
       label={label}
