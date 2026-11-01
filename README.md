@@ -1,6 +1,11 @@
 # Leygen – hjälp med bostadsaffärer i Sverige
 
-En webbapp som hjälper dig att räkna på, jämföra och granska bostäder innan du köper.
+Leygen hjälper köpare (och säljare) av bostadsrätter att räkna på vad de har råd med, granska föreningens ekonomi och
+värdera lägenheten – inklusive det som är svårt att prisa in, som föreningens skuld, direktverkande el, stambyte och
+tomträtt.
+
+**Demo:** https://avrclaesson.github.io/leygen/ – statisk version utan AI-inläsning och databas. Under *Ny analys*
+finns "Visa ett exempel" med en påhittad årsredovisning.
 
 ## Kom igång
 
@@ -14,94 +19,81 @@ npm test        # enhetstester
 npm run build && npm start   # produktion: servern serverar även dist/
 ```
 
-Servern kräver Node 22.18+ (kör TypeScript direkt).
+Kräver Node 22.18+ (servern kör TypeScript direkt och använder inbyggda `node:sqlite`, som skriver ut en
+experimentell varning vid start).
 
-## Dela en demo
-
-**Alternativ A – GitHub Pages (statisk demo, utan AI-inläsning)**
-1. Pages för privata repon kräver GitHub Pro/Team. Annars: gör repot publikt.
-2. Settings → Pages → Source: **GitHub Actions**.
-3. Merga till `main` (eller kör workflowen *Deploy demo to GitHub Pages* manuellt).
-4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under Granska BRF finns "Visa ett exempel" i stället för uppladdning.
-
-**Alternativ B – Tailscale Funnel (hela appen, från din dator)**
-```bash
-cd web && npm install && npm run build
-ANTHROPIC_API_KEY=sk-ant-... npm start      # http://localhost:8787
-tailscale funnel 8787                        # publik https-länk: https://<dator>.<tailnet>.ts.net
-```
-- Funnel måste vara tillåtet i tailnetets inställningar (Tailscale frågar första gången).
-- Ska bara personer i ditt tailnet komma åt den: använd `tailscale serve 8787` i stället.
-- Servern tillåter max 20 inläsningar per timme (`MAX_EXTRACTIONS_PER_HOUR`) så att en publik länk inte kan dra iväg kostnader. Datorn måste vara igång.
-
-## Ny analys (startsidan)
-
-Ett flöde för en bostad: fyll i uppgifterna från annonsen, ladda upp årsredovisningen (eller sök föreningen på org.nr)
-och få en samlad rapport som kan skrivas ut eller sparas som PDF:
-
-- **Två värden:** *ekonomiskt värde* (föreningens skuld och löpande kostnader omräknade till kronor) och
-  *vad marknaden brukar betala* (kalibrerat mot studier: −2,5 % per 1 000 kr/mån högre avgift enligt Wilhelmsson,
-  KTH 2025; tomträtt −3,6 % centralt / −6,8 % förort enligt Boberg m.fl., KTH 2025; balkong +1,9 % enligt Booli 2024).
-  Skillnaden är det marknaden inte tar betalt för.
-- Månadskostnad idag och om 5 år, bankens KALP, föreningens betyg.
-- Kostnad över tid med stambyte och ny tomträttsavgäld inlagda automatiskt från årsredovisningen.
-
-- **Motståndskraft vid nedgång:** tre scenarier (mild, som 2022–23, djup kris som 90-talet) där värdeförändringen
-  delas upp i marknaden (regionens prisfall från toppen 2022 enligt Mäklarstatistik), prissegment (billigare
-  kvm-pris svänger mer – antagande, svenska data saknas), och föreningen (skuld utöver områdets nivå ⇒ större
-  avgiftshöjning när räntan stiger ⇒ större prisfall). Visar också belåningsgrad och månadskostnad i scenariot.
-  Logik: `web/src/lib/resilience.ts`.
-
-Kopplingen mellan annons, årsredovisning och beräkningar finns i `web/src/lib/analysis.ts`.
-
-## Funktioner (v0.1)
+## Funktioner
 
 | Flik | Innehåll |
 |---|---|
-| **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP-kalkyl med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell för ränta × avgiftshöjning. |
-| **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling, med info om vad som begränsar (insats, KALP eller skuldkvot). |
-| **Granska BRF** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+| **Ny analys** (startsidan) | Annonsuppgifter + årsredovisning → samlad rapport som kan sparas som PDF. Se nedan. |
+| **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell ränta × avgiftshöjning. |
+| **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling och vad som begränsar (insats, KALP eller skuldkvot). |
+| **Granska BRF** | Nyckeltal från årsredovisningen med trafikljus (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet), varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+| **Värdering** | Områdespris justerat i kronor för föreningens skuld, avgift, direktverkande el, stambyte, tomträtt, hyresrätter, bottenvåning/balkong/hiss. |
+| **Kostnad över tid** | Månadskostnaden 10 år framåt (2 000 simulerade räntebanor, median och 10–90-percentil), "räntan slår dubbelt" och kända händelser i föreningen. |
+| **Rapportera slutpris** | Användare bidrar med slutpriser (samtycke och raderingsnyckel) – underlag för en framtida värderingsmodell. |
 
-### Läs in årsredovisning (AI)
+### Ny analys
 
-Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
+Fyll i uppgifterna från annonsen, ladda upp årsredovisningen (eller sök föreningen på org.nr) och få en rapport med:
 
-- alla fält i BRF-analysen (ytor, skulder, avgifter, resultat, avskrivningar, underhåll, energi, kassa, tomträtt, byggår, stambyte),
-- genomsnittlig ränta och lån som ska omförhandlas inom 12 månader,
-- föreningens egna nyckeltal (för kontroll mot våra beräkningar),
-- beslutade avgiftsändringar och en lista med iakttagelser för köpare (stambyte, ränteförfall, tvister, revisorns anmärkningar m.m.),
-- vilka värden som är osäkra/tolkade.
+- **Två värden:** *ekonomiskt värde* – föreningens skuld och alla löpande kostnader omräknade till kronor idag – och
+  *vad marknaden brukar betala* – kalibrerat mot vad studier uppmätt på slutpriser. Skillnaden är det marknaden inte
+  tar betalt för: en risk för köparen, ofta en fördel vid försäljning.
+- **Månadskostnad** idag och om 5 år, **bankens KALP** och **föreningens betyg**.
+- **Kostnad över tid** med stambyte och ny tomträttsavgäld inlagda automatiskt från årsredovisningen.
+- **Motståndskraft vid nedgång:** tre scenarier (mild, som 2022–23, djup kris som 90-talet). Värdeförändringen delas
+  upp i marknaden (regionens prisfall från toppen 2022), prissegment (billigare kvm-pris antas svänga mer) och
+  föreningen (skuld över områdets nivå ⇒ större avgiftshöjning när räntan stiger ⇒ större prisfall). Visar även
+  belåningsgrad och ökad månadskostnad i varje scenario.
 
-Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/brfExtractionSchema.ts` och instruktionerna (var varje uppgift finns, tkr→kr, vilken kolumn) i `web/server/extractBrf.ts`.
+### Inläsning av årsredovisning (AI)
 
-**Modellval:** Claude Haiku 5.5 körs först (`BRF_MODEL`). Resultatet går igenom en rimlighetskontroll (`checkConsistency`): beräknad skuld/kvm och avgift/kvm jämförs med föreningens egna nyckeltal, och orimliga storlekar (t.ex. tkr som inte räknats om) flaggas. Om Haiku avböjer, svarar ogiltigt eller inte klarar kontrollen körs dokumentet om med Claude Opus 5.5 (`BRF_ESCALATION_MODEL`, sätt till tom sträng för att stänga av). Kvarstående avvikelser visas för användaren.
+Servern skickar PDF:en till Claude med structured outputs och får tillbaka:
 
-**Mät kvaliteten:** lägg årsredovisningar och handkontrollerade facit-filer i `web/eval/reports/` och kör `npm run eval -- claude-haiku-5-5 claude-opus-5-5`. Se `web/eval/run.ts`.
+- alla fält i BRF-analysen (ytor, skulder, avgifter, resultat, avskrivningar, underhåll, energi, kassa, tomträtt,
+  byggår, senaste stambyte),
+- planerat stambyte (år och kostnad), tomträttsavgäld och nästa omreglering, antal hyresrätter,
+- genomsnittlig ränta och lån som villkorsändras inom 12 månader (⇒ uppskattad bindningstid),
+- föreningens egna nyckeltal, beslutade avgiftsändringar och iakttagelser för köpare med sidhänvisning,
+- vilka värden som är osäkra.
 
-### Värdering (Värdering-fliken)
+**Modellval:** Claude Haiku 5.5 körs först (`BRF_MODEL`). En rimlighetskontroll jämför beräknad skuld/kvm och
+avgift/kvm med föreningens egna nyckeltal och letar efter orimliga belopp (t.ex. tkr som inte räknats om). Avböjer
+Haiku, svarar ogiltigt eller klarar inte kontrollen körs dokumentet om med Claude Opus 5.5
+(`BRF_ESCALATION_MODEL`, tom sträng stänger av). Kvarstående avvikelser visas för användaren.
 
-Utgår från områdets kvm-pris för en "normal" lägenhet och justerar i kronor för det som är svårt att prisa in:
-föreningens skuld (krona för krona), avgift exkl. räntedel (kapitaliserad), direktverkande el, kommande stambyte,
-höjd tomträttsavgäld, hyresrätter som kan säljas, samt bottenvåning/balkong/hiss (tumregler). Löpande kostnader
-kapitaliseras med en diskonteringsränta (5 % ⇒ 100 kr/mån ≈ 24 000 kr). Logik: `web/src/lib/valuation.ts`.
+**Mät kvaliteten:** lägg årsredovisningar och handkontrollerade facit-filer i `web/eval/reports/` och kör
+`npm run eval -- claude-haiku-5-5 claude-opus-5-5` (se `web/eval/run.ts`). PDF:erna committas inte.
 
-### Kostnad över tid (Kostnad över tid-fliken)
+## Kod
 
-Monte Carlo-simulering (2 000 räntebanor) av månadskostnaden 10 år framåt, visad som median och 10–90-percentil.
-Räntan slår både på det egna lånet och – med fördröjning enligt föreningens bindningstid – på avgiften via
-föreningens lån. Kända händelser (stambyte som ökar föreningens skuld, höjd tomträttsavgäld) läggs in per år.
-Logik: `web/src/lib/projection.ts`.
+| Sökväg | Innehåll |
+|---|---|
+| `web/src/lib/rules.ts` | Regler 2026: bolånetak, amorteringskrav, ränteavdrag, schabloner |
+| `web/src/lib/mortgage.ts` | Månadskostnad, KALP, maxpris, känslighet, försäljning |
+| `web/src/lib/brf.ts` | BRF-nyckeltal, betyg och varningar |
+| `web/src/lib/valuation.ts` | Ekonomisk värdering och marknadsvärdering |
+| `web/src/lib/projection.ts` | Simulering av kostnad över tid |
+| `web/src/lib/resilience.ts` | Scenarier för nedgång |
+| `web/src/lib/analysis.ts` | Kopplar annons + årsredovisning till beräkningarna |
+| `web/src/lib/brfExtractionSchema.ts` | Schema för AI-inläsningen |
+| `web/server/extractBrf.ts` | Instruktioner till Claude, modellval och eskalering |
+| `web/server/store.ts` | Databaslager (SQLite) |
+| `web/server/index.ts` | HTTP-server och API |
 
-### Databas
+All beräkningslogik är rena funktioner med tester (`npm test`). `CLAUDE.md` beskriver projektet för Claude-sessioner.
 
-SQLite via Nodes inbyggda `node:sqlite` – ingen separat databastjänst. Filen hamnar i `web/data/leygen.db`
-(ändra med `DATABASE_PATH`). Backup = kopiera filen. All databaskod ligger bakom gränssnittet `Store` i
-`web/server/store.ts`, med vanliga SQL-migreringar, så att den kan flyttas till Postgres/Supabase senare.
+### Databas och API
 
-- **Inlästa årsredovisningar** cachas per fil (SHA-256) och per org.nr. Samma PDF läses aldrig in två gånger, och
-  andra användare kan hämta en redan inläst förening via org.nr under Granska BRF – gratis och direkt.
-- **Slutpriser** kan rapporteras under fliken *Rapportera slutpris* (kräver samtycke). Användaren får en
-  raderingsnyckel. Statistik visas bara för orter med minst tre försäljningar.
+SQLite via `node:sqlite` – ingen separat databastjänst. Filen hamnar i `web/data/leygen.db` (ändra med
+`DATABASE_PATH`); backup = kopiera filen. Databaskoden ligger bakom gränssnittet `Store` med vanliga SQL-migreringar,
+så att den kan flyttas till Postgres/Supabase när det behövs inloggning och betalning.
+
+- **Inlästa årsredovisningar** cachas per fil och per org.nr: samma PDF läses aldrig in två gånger, och en redan inläst
+  förening kan hämtas via org.nr gratis och direkt. Cachade svar som inte matchar aktuellt schema läses in på nytt.
+- **Slutpriser** sparas bara med samtycke. Statistik visas bara för orter med minst tre försäljningar.
 
 | Endpoint | Beskrivning |
 |---|---|
@@ -111,65 +103,79 @@ SQLite via Nodes inbyggda `node:sqlite` – ingen separat databastjänst. Filen 
 | `DELETE /api/sales/:id` | Radera rapport (header `x-delete-token`) |
 | `GET /api/sales/summary` | Median kr/kvm per ort |
 
-All beräkningslogik ligger i `web/src/lib/` som rena funktioner och är testad (`npm test`).
+| Miljövariabel | Standard | Beskrivning |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | – | Krävs för AI-inläsning |
+| `PORT` | `8787` | Serverns port |
+| `DATABASE_PATH` | `web/data/leygen.db` | Databasfil |
+| `MAX_EXTRACTIONS_PER_HOUR` | `20` | Spärr mot missbruk (cachade svar räknas inte) |
+| `BRF_MODEL` / `BRF_ESCALATION_MODEL` | `claude-haiku-5-5` / `claude-opus-5-5` | Modeller för inläsning |
 
-### Regler som används (från 1 april 2026)
+## Publicering
+
+**GitHub Pages (demo):** `.github/workflows/pages.yml` bygger med `VITE_DEMO=true` och publicerar vid varje push till
+`main`. Pages ska ha källan *GitHub Actions* (Settings → Pages). I demon är AI-inläsning och slutprisrapportering
+avstängda.
+
+**Hela appen via Tailscale Funnel (från din dator):**
+```bash
+cd web && npm install && npm run build
+ANTHROPIC_API_KEY=sk-ant-... npm start      # http://localhost:8787
+tailscale funnel 8787                        # publik https-länk: https://<dator>.<tailnet>.ts.net
+```
+Använd `tailscale serve 8787` om bara ditt tailnet ska komma åt den. Datorn måste vara igång.
+
+## Antaganden och källor
+
+### Regler (från 1 april 2026)
 
 - Bolånetak 90 % (minst 10 % kontantinsats).
 - Amorteringskrav: 2 % vid belåningsgrad > 70 %, 1 % vid 50–70 %. Det skärpta kravet för skuldkvot > 4,5 är slopat.
-- Kalkylränta 7 % (justerbar), max skuldkvot 5,5 (justerbar).
-- Ränteavdrag 30 % upp till 100 000 kr/år, 21 % därutöver.
-- Levnadskostnader: ungefärliga schabloner (13 000 kr första vuxen, +9 000 kr per ytterligare vuxen, 5 000 kr/barn, 4 000 kr/bil). **Bör ersättas med Konsumentverkets officiella tabell.**
+- Kalkylränta 7 % och max skuldkvot 5,5 (justerbara).
+- Ränteavdrag 30 % upp till 100 000 kr/år, 21 % därutöver. Vinstskatt 22 %.
+- Levnadskostnader: ungefärliga schabloner (13 000 kr första vuxen, +9 000 kr per ytterligare vuxen, 5 000 kr/barn,
+  4 000 kr/bil). **Bör ersättas med Konsumentverkets officiella tabell.**
 
-Alla konstanter finns i `web/src/lib/rules.ts`. Verifiera mot Finansinspektionen innan lansering.
+Verifiera mot Finansinspektionen och Konsumentverket innan lansering.
 
-## Research
+### Värdering och motståndskraft
 
-### Finns det ett Booli-API?
+| Antagande | Källa |
+|---|---|
+| +1 000 kr/mån i avgift ⇒ 2–3 % lägre pris (vi använder 2,5 %) | [Wilhelmsson, KTH 2025](https://ideas.repec.org/p/hhs/kthrec/2025_013.html) |
+| Tomträtt −3,6 % centralt, −6,8 % i förort | [Boberg, Donner & Metsalo, KTH 2025](https://ideas.repec.org/p/hhs/kthrec/2025_010.html) |
+| Balkong +1,9 % | [Booli 2024](https://www.booli.se/kunskap/sa-mycket-okar-vardet-om-din-lagenhet-har-balkong) |
+| Prisfall från toppen 2022: Stockholm −12 %, Malmö −13 %, Uppsala −15 %, Göteborg −17 %, riket −14 % | Svensk Mäklarstatistik via [Placera 2026-10-28](https://www.placera.se/nyheter/bostadsratterna-forbi-pristoppen-2022-villorna-har-en-bit-kvar-2026-10-28) |
+| 90-talskrisen: villapriserna −21 %, ca 7 år till återhämtning | [Nordea](https://www.nordea.com/sv/nyhet/storm-pa-bostadsmarknaden-i-sverige) |
+| Billigare prissegment svänger mer | Amerikanska data ([Springer 2015](https://link.springer.com/article/10.1007/s11146-015-9523-2)); svenska data saknas – antagande |
+| Ekonomisk värdering kapitaliserar löpande kostnader med 5 % (100 kr/mån ≈ 24 000 kr) | Antagande |
+| Bottenvåning −5 %, ingen hiss högt upp −5 % | Tumregler, inte uppmätta |
+| Stambyte, direktverkande el | Inga studier hittade – kostnadsbaserade antaganden |
 
-Inte något öppet idag. Booli hade tidigare ett API för utvecklare (api.booli.se), men det finns inget publikt dokumenterat API nu. Alternativ:
+## Data – vad som finns och inte
 
-- **Scrapers från tredje part** (t.ex. Apify). Inte sanktionerade av Booli och kan strida mot deras villkor – olämpligt att bygga en produkt på.
-- **Booli Pro** – betald analystjänst för proffs; kontakta Booli om datasamarbete.
-- **Hemnet** har inte heller något öppet API.
+- **Booli/Hemnet:** inget öppet API. Booli Pro och datalicenser kräver offert. Skrapning används inte (databasskydd i
+  49 § upphovsrättslagen och användarvillkor).
+- **Slutpriser för bostadsrätter** registreras inte offentligt. Ett nationellt bostadsrättsregister väntas ca 2030,
+  men det är oklart om priser ingår. Därför samlar appen in slutpriser från användare.
+- **SCB:s fastighetsprisregister** (Lantmäteriets lagfarter) har köpeskillingar för villor och radhus – beställs via SCB.
+- **Öppna källor att koppla in:** Skatteverkets skattetabeller (nettolön), SCB och Riksbanken (prisindex, räntor),
+  Boverkets energideklarationer, Konsumentverkets schabloner, Bolagsverkets API (föreningsuppgifter).
 
-**Rekommendation:** Skippa annonssök i början. Låt användaren klistra in en annonslänk eller mata in pris/avgift/yta manuellt. Om produkten får fäste – kontakta Booli/Hemnet om partnerskap.
+Läsning om att granska en BRF: [Boverket – nyckeltal](https://www.boverket.se/sv/ekonomiska-planer/ekonomisk-plan/nyckeltal/),
+[Boio – BRF-ekonomi](https://boio.se/guide/brf-ekonomi), [Boio – årsredovisningen](https://boio.se/guide/brf-arsredovisning).
 
-### Datakällor som går att använda
+## Nästa steg
 
-| Källa | Vad | Användning |
-|---|---|---|
-| Bolagsverket – "värdefulla datamängder" (gratis API) | Grunduppgifter om företag/föreningar | Slå upp BRF via org.nr. Årsredovisningar för BRF verkar *inte* ingå (bara aktiebolag) – verifiera. |
-| TIC.io (betald) | BRF-endpoint med fastigheter och historiska bokslut | Automatisk BRF-analys utan manuell inmatning. |
-| SCB (öppet API) | Prisindex, bostadsbestånd, inkomster per område | Prisutveckling och områdesstatistik. |
-| Riksbanken (öppet API) | Styrränta, STIBOR | Ränteantaganden i känslighetsanalysen. |
-| Boverket – energideklarationer | Energiklass per byggnad | Komplettera BRF-analysen. |
-| Konsumentverket | Schabloner för levnadskostnader | Uppdatera KALP-schablonerna årligen. |
-| Lantmäteriet | Fastighetsinfo, tomträtt | Kräver avtal för de flesta tjänster. |
+**Snart**
+- Nettolön från bruttolön med Skatteverkets skattetabeller.
+- Driftsätta servern (t.ex. Fly.io/Railway/Render i EU) så att AI-inläsning och databas fungerar för alla.
+- Integritetspolicy innan slutpriser samlas in från andra.
+- Flera års årsredovisningar: trend i skuld och sparande.
 
-### Läsning om att granska en BRF
-
-- Boverket: [Nyckeltal ska redovisas i den ekonomiska planen](https://www.boverket.se/sv/ekonomiska-planer/ekonomisk-plan/nyckeltal/)
-- Boio: [BRF-ekonomi med kalkylator](https://boio.se/guide/brf-ekonomi) och [Läsa årsredovisningen](https://boio.se/guide/brf-arsredovisning)
-- BFN: [Remiss om informationsinnehåll i brf:s årsredovisning](https://www.bfn.se/wp-content/uploads/remiss-informationsinnehall-brfs-arsredovisning.pdf)
-
-## Idéer på fler funktioner
-
-**Hög prioritet**
-1. ~~AI-läsning av årsredovisning~~ ✅ Nästa steg: jämför flera års redovisningar (trend i skuld/sparande), läs även ekonomisk plan och stadgar.
-2. **Budtak** – sätt ett tak innan visningen: "vid X kr blir min månadskostnad Y och KALP Z".
-3. **Köpa före sälja / brygglån** – dubbla boendekostnader och brygglånets kostnad om försäljningen drar ut.
-4. **Jämför bostäder sida vid sida** – månadskostnad, verkligt pris/kvm, BRF-betyg.
-5. **Checklista inför köp** – frågor till mäklare/styrelse (avgiftshöjningar, stambyte, föreningens lån, andrahandsuthyrning, tvister), besiktning, överlåtelseavtal.
-
-**Medel**
-6. **Hyra vs. köpa** – alternativkostnad för insatsen, värdeutveckling, transaktionskostnader.
-7. **Räntebindning** – rörligt vs. bundet, historik från Riksbanken.
-8. **Prisutveckling i området** – SCB.
-9. **Skatt vid försäljning över tid** – uppskov, kapitalförlust (50 % avdragsgill).
-10. **Delat ägande** – ägarandelar vid olika insats, samboavtal.
-
-**Senare**
-11. Bevakning av en BRF (ny årsredovisning, avgiftsändring).
-12. Renovering: vad är förbättringsutgift, vad höjer värdet.
-13. Inloggning och sparade scenarier.
+**Sedan**
+- Värderingsmodell (XGBoost) när det finns tillräckligt med slutpriser – från användare, mäklarsamarbete eller Booli.
+- Mäta stambytets priseffekt med egna data (ingen studie finns).
+- Inloggning, köp av analyser och flytt av databasen till Supabase.
+- Budtak inför visning, köpa före sälja/brygglån, jämföra bostäder sida vid sida, checklista inför köp.
+- Hyra vs. köpa, räntebindning, delat ägande, bevakning av en förening.
