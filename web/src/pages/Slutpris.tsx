@@ -80,9 +80,7 @@ export default function Slutpris() {
   if (DEMO) {
     return (
       <div className="page">
-        <Card title="Rapportera slutpris">
-          <p>I demon sparas inga uppgifter. Här kan man i den riktiga appen rapportera vad man köpte eller sålde för.</p>
-        </Card>
+        <p className="demo-note">I demon sparas inga uppgifter. Här kan man i den riktiga appen rapportera vad man köpte eller sålde för.</p>
       </div>
     );
   }

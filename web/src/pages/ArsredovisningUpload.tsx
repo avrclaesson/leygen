@@ -13,8 +13,6 @@ type State =
   | { kind: 'error'; message: string }
   | { kind: 'done'; data: ExtractionResult };
 
-const SEVERITY_ICON = { info: 'ℹ️', warning: '⚠️', critical: '🛑' } as const;
-
 export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: ExtractionResult) => void }) {
   const [state, setState] = useState<State>({ kind: 'idle' });
 
@@ -64,7 +62,7 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
   if (DEMO) {
     return (
       <div className="upload">
-        <p>
+        <p className="demo-note">
           I demon är AI-inläsningen avstängd. <button className="link" onClick={showDemo}>Visa ett exempel</button> på hur en
           inläst årsredovisning ser ut.
         </p>
@@ -99,7 +97,9 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
           </span>
         ) : (
           <span>
-            📄 <strong>Ladda upp årsredovisningen (PDF)</strong> – nyckeltalen fylls i automatiskt.
+            <strong>Ladda upp årsredovisningen (PDF)</strong>
+            <br />
+            Nyckeltalen fylls i automatiskt.
             <br />
             <small className="hint">Släpp filen här eller klicka för att välja. Dokumentet skickas till Claude (Anthropic) för analys.</small>
           </span>
@@ -170,9 +170,7 @@ function ExtractionSummary({ data }: { data: ExtractionResult }) {
           <h3>Att känna till</h3>
           <ul className="warnings">
             {data.findings.map((f, i) => (
-              <li key={i} className={`finding ${f.severity}`}>
-                {SEVERITY_ICON[f.severity]} {f.text}
-              </li>
+              <li key={i} className={f.severity}>{f.text}</li>
             ))}
           </ul>
         </>
@@ -182,7 +180,7 @@ function ExtractionSummary({ data }: { data: ExtractionResult }) {
           <h3>Kontrollera dessa värden</h3>
           <ul className="warnings">
             {data.consistencyIssues.map((c, i) => (
-              <li key={i}>🔎 {c.message}</li>
+              <li key={i}>{c.message}</li>
             ))}
           </ul>
         </>

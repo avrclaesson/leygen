@@ -22,7 +22,7 @@ Servern kräver Node 22.18+ (kör TypeScript direkt).
 1. Pages för privata repon kräver GitHub Pro/Team. Annars: gör repot publikt.
 2. Settings → Pages → Source: **GitHub Actions**.
 3. Merga till `main` (eller kör workflowen *Deploy demo to GitHub Pages* manuellt).
-4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under Granska BRF finns "Visa ett exempel" i stället för uppladdning.
+4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under Förening finns "Visa ett exempel" i stället för uppladdning.
 
 **Alternativ B – Tailscale Funnel (hela appen, från din dator)**
 ```bash
@@ -58,13 +58,13 @@ Kopplingen mellan annons, årsredovisning och beräkningar finns i `web/src/lib/
 
 | Flik | Innehåll |
 |---|---|
-| **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP-kalkyl med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell för ränta × avgiftshöjning. |
-| **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling, med info om vad som begränsar (insats, KALP eller skuldkvot). |
-| **Granska BRF** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+| **Månadskostnad** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP-kalkyl med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell för ränta × avgiftshöjning. |
+| **Budget** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling, med info om vad som begränsar (insats, KALP eller skuldkvot). |
+| **Förening** | Nyckeltal från årsredovisningen (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet) med trafikljus, varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
 
 ### Läs in årsredovisning (AI)
 
-Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
+Ladda upp föreningens årsredovisning som PDF under **Förening**. Servern (`web/server/`) skickar dokumentet till Claude (`claude-opus-5-5`) med structured outputs och får tillbaka:
 
 - alla fält i BRF-analysen (ytor, skulder, avgifter, resultat, avskrivningar, underhåll, energi, kassa, tomträtt, byggår, stambyte),
 - genomsnittlig ränta och lån som ska omförhandlas inom 12 månader,
@@ -72,7 +72,7 @@ Ladda upp föreningens årsredovisning som PDF under **Granska BRF**. Servern (`
 - beslutade avgiftsändringar och en lista med iakttagelser för köpare (stambyte, ränteförfall, tvister, revisorns anmärkningar m.m.),
 - vilka värden som är osäkra/tolkade.
 
-Fälten fylls i automatiskt och markeras i blått. Schemat finns i `web/src/lib/brfExtractionSchema.ts` och instruktionerna (var varje uppgift finns, tkr→kr, vilken kolumn) i `web/server/extractBrf.ts`.
+Fälten fylls i automatiskt och markeras i grönt. Schemat finns i `web/src/lib/brfExtractionSchema.ts` och instruktionerna (var varje uppgift finns, tkr→kr, vilken kolumn) i `web/server/extractBrf.ts`.
 
 **Modellval:** Claude Haiku 5.5 körs först (`BRF_MODEL`). Resultatet går igenom en rimlighetskontroll (`checkConsistency`): beräknad skuld/kvm och avgift/kvm jämförs med föreningens egna nyckeltal, och orimliga storlekar (t.ex. tkr som inte räknats om) flaggas. Om Haiku avböjer, svarar ogiltigt eller inte klarar kontrollen körs dokumentet om med Claude Opus 5.5 (`BRF_ESCALATION_MODEL`, sätt till tom sträng för att stänga av). Kvarstående avvikelser visas för användaren.
 
@@ -99,7 +99,7 @@ SQLite via Nodes inbyggda `node:sqlite` – ingen separat databastjänst. Filen 
 `web/server/store.ts`, med vanliga SQL-migreringar, så att den kan flyttas till Postgres/Supabase senare.
 
 - **Inlästa årsredovisningar** cachas per fil (SHA-256) och per org.nr. Samma PDF läses aldrig in två gånger, och
-  andra användare kan hämta en redan inläst förening via org.nr under Granska BRF – gratis och direkt.
+  andra användare kan hämta en redan inläst förening via org.nr under Förening – gratis och direkt.
 - **Slutpriser** kan rapporteras under fliken *Rapportera slutpris* (kräver samtycke). Användaren får en
   raderingsnyckel. Statistik visas bara för orter med minst tre försäljningar.
 

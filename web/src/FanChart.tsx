@@ -5,7 +5,7 @@ import { formatKr } from './lib/format';
 const W = 720;
 const H = 300;
 const M = { top: 16, right: 96, bottom: 32, left: 64 };
-const BLUE = '#256abf';
+const INK = '#16181a';
 
 function niceTicks(max: number, count = 5) {
   const raw = max / count;
@@ -32,7 +32,7 @@ export function FanChart({ data }: { data: YearPoint[] }) {
       <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Månadskostnad över tid: median och 10–90-percentil">
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke="#e6e9f0" strokeWidth={1} />
+            <line x1={M.left} x2={W - M.right} y1={y(t)} y2={y(t)} stroke="#e7e7e4" strokeWidth={1} />
             <text x={M.left - 8} y={y(t)} dy="0.32em" textAnchor="end" className="axis">
               {Math.round(t / 1000)} tkr
             </text>
@@ -43,15 +43,15 @@ export function FanChart({ data }: { data: YearPoint[] }) {
             {d.year === 0 ? 'Idag' : d.year}
           </text>
         ))}
-        <path d={band} fill={BLUE} opacity={0.12} />
-        <path d={line('p50')} fill="none" stroke={BLUE} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+        <path d={band} fill={INK} opacity={0.08} />
+        <path d={line('p50')} fill="none" stroke={INK} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
         <text x={x(maxYear) + 8} y={y(last.p90)} dy="0.32em" className="label">Hög (90 %)</text>
         <text x={x(maxYear) + 8} y={y(last.p50)} dy="0.32em" className="label strong">Median</text>
         <text x={x(maxYear) + 8} y={y(last.p10)} dy="0.32em" className="label">Låg (10 %)</text>
         {h && (
           <g>
-            <line x1={x(h.year)} x2={x(h.year)} y1={M.top} y2={H - M.bottom} stroke="#8a93a6" strokeWidth={1} />
-            <circle cx={x(h.year)} cy={y(h.p50)} r={4} fill={BLUE} stroke="#fff" strokeWidth={2} />
+            <line x1={x(h.year)} x2={x(h.year)} y1={M.top} y2={H - M.bottom} stroke="#8b9095" strokeWidth={1} />
+            <circle cx={x(h.year)} cy={y(h.p50)} r={4} fill={INK} stroke="#fff" strokeWidth={2} />
           </g>
         )}
         <rect
@@ -60,12 +60,17 @@ export function FanChart({ data }: { data: YearPoint[] }) {
           width={W - M.left - M.right}
           height={H - M.top - M.bottom}
           fill="transparent"
-          onMouseMove={(e) => {
+          onPointerDown={(e) => {
             const rect = (e.target as SVGRectElement).getBoundingClientRect();
             const rel = (e.clientX - rect.left) / rect.width;
             setHover(Math.max(0, Math.min(data.length - 1, Math.round(rel * maxYear))));
           }}
-          onMouseLeave={() => setHover(null)}
+          onPointerMove={(e) => {
+            const rect = (e.target as SVGRectElement).getBoundingClientRect();
+            const rel = (e.clientX - rect.left) / rect.width;
+            setHover(Math.max(0, Math.min(data.length - 1, Math.round(rel * maxYear))));
+          }}
+          onPointerLeave={() => setHover(null)}
         />
       </svg>
       {h && (

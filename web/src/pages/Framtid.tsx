@@ -33,20 +33,6 @@ export default function Framtid() {
 
   return (
     <div className="page">
-      <Card title="Räntan slår dubbelt">
-        <p>
-          Om räntan stiger med <strong>1 procentenhet</strong>:
-        </p>
-        <Row label="Ditt bolån (efter ränteavdrag)" value={`+${formatKr(shock.ownLoan)}/mån`} />
-        <Row label="Avgiften – föreningens lån (inget ränteavdrag)" value={`+${formatKr(shock.viaFee)}/mån`} />
-        <Row label="Totalt när allt slagit igenom" value={`+${formatKr(shock.ownLoan + shock.viaFee)}/mån`} strong />
-        <p className="hint">
-          Föreningens lån räntejusteras successivt (bindningstid {p.brfBindingYears} år), så avgiften stiger med ca{' '}
-          {formatKr(shock.viaFeeFirstYear)}/mån första året. Räntan via avgiften är dyrare krona för krona eftersom den inte ger
-          ränteavdrag.
-        </p>
-      </Card>
-
       <Card title={`Månadskostnad de kommande ${p.years} åren`}>
         <FanChart data={data} />
         <p className="hint">
@@ -77,6 +63,18 @@ export default function Framtid() {
             </tbody>
           </table>
         </details>
+      </Card>
+
+      <Card title="Räntan slår dubbelt">
+        <p className="hint">Så mycket stiger månadskostnaden om räntan går upp 1 procentenhet.</p>
+        <Row label="Ditt bolån (efter ränteavdrag)" value={`+${formatKr(shock.ownLoan)}/mån`} />
+        <Row label="Avgiften – föreningens lån (inget ränteavdrag)" value={`+${formatKr(shock.viaFee)}/mån`} />
+        <Row label="Totalt när allt slagit igenom" value={`+${formatKr(shock.ownLoan + shock.viaFee)}/mån`} strong />
+        <p className="hint">
+          Föreningens lån räntejusteras successivt (bindningstid {p.brfBindingYears} år), så avgiften stiger med ca{' '}
+          {formatKr(shock.viaFeeFirstYear)}/mån första året. Räntan via avgiften är dyrare krona för krona eftersom den inte ger
+          ränteavdrag.
+        </p>
       </Card>
 
       <Card title="Bostaden och föreningen">
