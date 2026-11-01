@@ -1,4 +1,8 @@
 import { useState } from 'react';
+import { DEMO_EXTRACTION } from '../lib/demoExtraction';
+
+/** Statisk demo (t.ex. GitHub Pages) – ingen server för AI-inläsning. */
+const DEMO = import.meta.env.VITE_DEMO === 'true';
 import { FIELD_LABELS, type ConsistencyIssue, type ExtractedBrf } from '../lib/brfExtraction';
 
 export type ExtractionResult = ExtractedBrf & { model: string; consistencyIssues: ConsistencyIssue[] };
@@ -26,13 +30,32 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
         headers: { 'content-type': 'application/pdf' },
         body: file,
       });
-      const body = await res.json().catch(() => ({ error: `Servern svarade ${res.status}.` }));
+      const body = await res
+        .json()
+        .catch(() => ({ error: res.status === 404 ? 'AI-inläsningen kräver servern (npm run server).' : `Servern svarade ${res.status}.` }));
       if (!res.ok) throw new Error(body.error ?? `Servern svarade ${res.status}.`);
       setState({ kind: 'done', data: body as ExtractionResult });
       onExtracted(body as ExtractionResult);
     } catch (err) {
       setState({ kind: 'error', message: err instanceof Error ? err.message : String(err) });
     }
+  }
+
+  const showDemo = () => {
+    setState({ kind: 'done', data: DEMO_EXTRACTION });
+    onExtracted(DEMO_EXTRACTION);
+  };
+
+  if (DEMO) {
+    return (
+      <div className="upload">
+        <p>
+          I demon är AI-inläsningen avstängd. <button className="link" onClick={showDemo}>Visa ett exempel</button> på hur en
+          inläst årsredovisning ser ut.
+        </p>
+        {state.kind === 'done' && <ExtractionSummary data={state.data} />}
+      </div>
+    );
   }
 
   return (
@@ -69,6 +92,11 @@ export function ArsredovisningUpload({ onExtracted }: { onExtracted: (data: Extr
       </label>
 
       {state.kind === 'error' && <p className="bad">{state.message}</p>}
+      {state.kind !== 'loading' && state.kind !== 'done' && (
+        <p className="hint">
+          Ingen årsredovisning till hands? <button className="link" onClick={showDemo}>Visa ett exempel</button>
+        </p>
+      )}
 
       {state.kind === 'done' && <ExtractionSummary data={state.data} />}
     </div>

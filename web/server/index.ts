@@ -17,6 +17,17 @@ const MAX_PDF_BYTES = 22 * 1024 * 1024;
 const DIST = join(import.meta.dirname, '..', 'dist');
 const client = new Anthropic();
 
+// Enkel spärr mot missbruk när servern delas publikt (t.ex. via Tailscale Funnel).
+const MAX_PER_HOUR = Number(process.env.MAX_EXTRACTIONS_PER_HOUR ?? 20);
+const recent: number[] = [];
+function allowExtraction(): boolean {
+  const hourAgo = Date.now() - 3_600_000;
+  while (recent.length && recent[0] < hourAgo) recent.shift();
+  if (recent.length >= MAX_PER_HOUR) return false;
+  recent.push(Date.now());
+  return true;
+}
+
 function json(res: ServerResponse, status: number, body: unknown) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(body));
@@ -36,6 +47,9 @@ async function readBody(req: IncomingMessage, limit: number): Promise<Buffer> {
 async function handleExtract(req: IncomingMessage, res: ServerResponse) {
   if (!req.headers['content-type']?.startsWith('application/pdf')) {
     return json(res, 415, { error: 'Skicka filen som application/pdf.' });
+  }
+  if (!allowExtraction()) {
+    return json(res, 429, { error: 'Gränsen för antal inläsningar per timme är nådd. Försök igen senare.' });
   }
   try {
     const pdf = await readBody(req, MAX_PDF_BYTES);

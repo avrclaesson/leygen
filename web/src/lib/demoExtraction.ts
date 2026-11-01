@@ -1,0 +1,37 @@
+import type { ConsistencyIssue, ExtractedBrf } from './brfExtraction';
+
+/** Påhittat exempel på inläst årsredovisning, för demoläget. */
+export const DEMO_EXTRACTION: ExtractedBrf & { model: string; consistencyIssues: ConsistencyIssue[] } = {
+  associationName: 'Brf Exempelgården (påhittad)',
+  orgNumber: '769600-0000',
+  fiscalYear: '2025',
+  residentialArea: 2_400,
+  otherArea: 180,
+  apartmentCount: 38,
+  interestBearingDebt: 26_400_000,
+  yearlyFees: 1_580_000,
+  totalRevenue: 1_910_000,
+  netResult: -410_000,
+  depreciation: 520_000,
+  plannedMaintenance: 0,
+  energyCosts: 240_000,
+  cash: 380_000,
+  averageInterestRate: 0.0285,
+  debtMaturingWithin12Months: 9_000_000,
+  leasehold: true,
+  genuineHousingCoop: true,
+  buildYear: 1961,
+  lastPipeRenovation: null,
+  reportedKeyFigures: { debtPerSqm: 10_233, savingsPerSqm: 43, feePerSqm: 658, interestSensitivityPercent: 16.7 },
+  plannedFeeChange: 'Avgiften höjs med 8 % från 1 januari 2026.',
+  findings: [
+    { severity: 'critical', text: 'Underhållsplanen anger stambyte 2030, uppskattad kostnad 36 Mkr. Finansiering ej beslutad (s. 4).' },
+    { severity: 'warning', text: 'Lägenheterna har direktverkande el – uppvärmning ingår inte i avgiften (s. 2).' },
+    { severity: 'warning', text: 'Tomträttsavgälden omregleras 2031 (s. 2).' },
+    { severity: 'warning', text: '9 Mkr av lånen villkorsändras under 2026 (not 15).' },
+    { severity: 'info', text: 'Föreningen äger två hyresrätter som kan upplåtas med bostadsrätt när de blir lediga (s. 3).' },
+  ],
+  uncertainFields: ['energyCosts'],
+  model: 'demo',
+  consistencyIssues: [],
+};

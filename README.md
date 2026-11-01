@@ -16,6 +16,24 @@ npm run build && npm start   # produktion: servern serverar även dist/
 
 Servern kräver Node 22.18+ (kör TypeScript direkt).
 
+## Dela en demo
+
+**Alternativ A – GitHub Pages (statisk demo, utan AI-inläsning)**
+1. Pages för privata repon kräver GitHub Pro/Team. Annars: gör repot publikt.
+2. Settings → Pages → Source: **GitHub Actions**.
+3. Merga till `main` (eller kör workflowen *Deploy demo to GitHub Pages* manuellt).
+4. Demon hamnar på `https://<användare>.github.io/leygen/`. Under Granska BRF finns "Visa ett exempel" i stället för uppladdning.
+
+**Alternativ B – Tailscale Funnel (hela appen, från din dator)**
+```bash
+cd web && npm install && npm run build
+ANTHROPIC_API_KEY=sk-ant-... npm start      # http://localhost:8787
+tailscale funnel 8787                        # publik https-länk: https://<dator>.<tailnet>.ts.net
+```
+- Funnel måste vara tillåtet i tailnetets inställningar (Tailscale frågar första gången).
+- Ska bara personer i ditt tailnet komma åt den: använd `tailscale serve 8787` i stället.
+- Servern tillåter max 20 inläsningar per timme (`MAX_EXTRACTIONS_PER_HOUR`) så att en publik länk inte kan dra iväg kostnader. Datorn måste vara igång.
+
 ## Funktioner (v0.1)
 
 | Flik | Innehåll |

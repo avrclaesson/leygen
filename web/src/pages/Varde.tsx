@@ -37,7 +37,7 @@ export default function Varde() {
     groundFloor: false,
     groundFloorPct: -0.05,
     noBalcony: false,
-    noBalconyPct: -0.03,
+    noBalconyPct: -0.02,
     noElevatorHighFloor: false,
     noElevatorPct: -0.05,
     renovationNeed: 0,
@@ -131,7 +131,7 @@ export default function Varde() {
         {v.leasehold && (
           <div className="grid">
             <NumberField label="Tomträttsavgäld idag (föreningen)" value={v.groundRentYear} onChange={f('groundRentYear')} step={10000} suffix="kr/år" />
-            <PercentField label="Förväntad höjning" value={v.groundRentIncrease} onChange={f('groundRentIncrease')} hint="Höjningar på 50–200 % förekommer vid omförhandling" />
+            <PercentField label="Förväntad höjning" value={v.groundRentIncrease} onChange={f('groundRentIncrease')} hint="Höjningar på 50–200 % förekommer vid omförhandling. En KTH-studie (2025) fann i snitt 3,6 % lägre pris för tomträtt i Stockholms innerstad och 6,8 % i förorterna." />
             <NumberField label="Nästa omförhandling om" value={v.groundRentYearsUntil} onChange={f('groundRentYearsUntil')} suffix="år" />
           </div>
         )}
