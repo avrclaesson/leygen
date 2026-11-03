@@ -8,7 +8,7 @@ föreningens ekonomi och värdera lägenheten. Det är **inte** en annons- eller
 - **Ny analys** (startsidan): annonsuppgifter + föreningens årsredovisning → samlad rapport med ekonomiskt värde och
   marknadsvärde, månadskostnad idag och över tid, KALP, föreningens betyg och motståndskraft vid nedgång.
 - **Månadskostnad**, **Budget** (köp/sälj), **Förening**, **Värdering**, **Över tid**.
-- **AI-inläsning av årsredovisningar** (PDF → nyckeltal) med Claude Haiku 5.5 och eskalering till Opus 5.5.
+- **AI-inläsning av årsredovisningar** (PDF → nyckeltal) med Claude Sonnet 5.5 och eskalering till Opus 5.5.
 - **Slutpris**: användare bidrar med slutpriser (samtycke + raderingsnyckel) för en framtida värderingsmodell.
 
 ## Struktur

@@ -59,13 +59,16 @@ Servern skickar PDF:en till Claude med structured outputs och får tillbaka:
 - föreningens egna nyckeltal, beslutade avgiftsändringar och iakttagelser för köpare med sidhänvisning,
 - vilka värden som är osäkra.
 
-**Modellval:** Claude Haiku 5.5 körs först (`BRF_MODEL`). En rimlighetskontroll jämför beräknad skuld/kvm och
+**Modellval:** Claude Sonnet 5.5 körs först (`BRF_MODEL`). I tester av förra generationen var Sonnet tydligt bättre
+än Haiku på dokument och tabeller, och kostnaden (grovt 1–2 kr per årsredovisning) betalas bara en gång per förening
+tack vare cachen. En rimlighetskontroll jämför beräknad skuld/kvm och
 avgift/kvm med föreningens egna nyckeltal och letar efter orimliga belopp (t.ex. tkr som inte räknats om). Avböjer
-Haiku, svarar ogiltigt eller klarar inte kontrollen körs dokumentet om med Claude Opus 5.5
+Sonnet, svarar ogiltigt eller klarar inte kontrollen körs dokumentet om med Claude Opus 5.5
 (`BRF_ESCALATION_MODEL`, tom sträng stänger av). Kvarstående avvikelser visas för användaren.
 
 **Mät kvaliteten:** lägg årsredovisningar och handkontrollerade facit-filer i `web/eval/reports/` och kör
-`npm run eval -- claude-haiku-5-5 claude-opus-5-5` (se `web/eval/run.ts`). PDF:erna committas inte.
+`npm run eval -- claude-haiku-5-5 claude-sonnet-5-5` (se `web/eval/run.ts`) – visar om den billigare Haiku 5.5 räcker
+(`BRF_MODEL=claude-haiku-5-5`). PDF:erna committas inte.
 
 ## Kod
 
@@ -109,7 +112,7 @@ så att den kan flyttas till Postgres/Supabase när det behövs inloggning och b
 | `PORT` | `8787` | Serverns port |
 | `DATABASE_PATH` | `web/data/leygen.db` | Databasfil |
 | `MAX_EXTRACTIONS_PER_HOUR` | `20` | Spärr mot missbruk (cachade svar räknas inte) |
-| `BRF_MODEL` / `BRF_ESCALATION_MODEL` | `claude-haiku-5-5` / `claude-opus-5-5` | Modeller för inläsning |
+| `BRF_MODEL` / `BRF_ESCALATION_MODEL` | `claude-sonnet-5-5` / `claude-opus-5-5` | Modeller för inläsning |
 
 ## Publicering
 
