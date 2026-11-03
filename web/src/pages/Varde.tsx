@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CheckField, NumberField, PercentField, Row, setter } from '../components';
+import { Card, CheckField, NumberField, PercentField, Row, Tool, setter } from '../components';
 import { valuate, type ValuationInput } from '../lib/valuation';
 import { formatKr } from '../lib/format';
 
@@ -48,42 +48,42 @@ export default function Varde() {
 
   return (
     <div className="page">
-      <Card title="Uppskattat värde">
-        <p className="hint">Exempelvärdena nedan är påhittade – fyll i din egen lägenhet.</p>
-        <div className="big">{formatKr(Math.round(r.estimate / 10_000) * 10_000)}</div>
-        <Row label={`Områdespris (${formatKr(v.areaPricePerSqm)}/kvm × ${v.area} kvm)`} value={formatKr(r.base)} />
-        <table className="table adjustments">
-          <tbody>
-            {r.adjustments.map((a) => (
-              <tr key={a.key}>
-                <td>
-                  {a.label}
-                  <br />
-                  <small className="hint">{a.explanation}</small>
-                </td>
-                <td className="bar-cell">
-                  <span className={`bar ${a.amount < 0 ? 'neg' : 'pos'}`} style={{ width: `${(Math.abs(a.amount) / maxAbs) * 100}%` }} />
-                </td>
-                <td className="nowrap num">{signed(a.amount)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <Row label="Uppskattat värde" value={formatKr(r.estimate)} strong />
-        <Row label="Pris du jämför med" value={formatKr(v.askingPrice)} />
-        <Row
-          label={r.overprice > 0 ? 'Priset ligger över uppskattat värde med' : 'Priset ligger under uppskattat värde med'}
-          value={<span className={r.overprice > 0 ? 'bad' : 'good'}>{formatKr(Math.abs(r.overprice))}</span>}
-          strong
-        />
-        <p className="hint">
-          Löpande kostnader omräknas till ett värde idag med {(v.discountRate * 100).toLocaleString('sv-SE')} % diskonteringsränta
-          (100 kr/mån ≈ {formatKr(1200 / v.discountRate)}). Procentjusteringar är tumregler. Se resultatet som ett
-          resonemangsunderlag, inte en exakt värdering.
-        </p>
-      </Card>
-
+      <Tool
+        result={
+          <section className="card">
+            <p className="summary-title">Uppskattat värde</p>
+            <div className="big">{formatKr(Math.round(r.estimate / 10_000) * 10_000)}</div>
+            <p className="big-sub">
+              Priset är <span className={r.overprice > 0 ? 'bad' : 'good'}>{formatKr(Math.abs(r.overprice))} {r.overprice > 0 ? 'högre' : 'lägre'}</span>
+            </p>
+            <Row label={`Områdespris × ${v.area} kvm`} value={formatKr(r.base)} />
+            <table className="table">
+              <tbody>
+                {r.adjustments.map((a) => (
+                  <tr key={a.key}>
+                    <td>
+                      {a.label}
+                      <small className="hint">{a.explanation}</small>
+                      <span className="adjust-bar">
+                        <span className={`bar ${a.amount < 0 ? 'neg' : 'pos'}`} style={{ width: `${(Math.abs(a.amount) / maxAbs) * 100}%` }} />
+                      </span>
+                    </td>
+                    <td className="num">{signed(a.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Row label="Uppskattat värde" value={formatKr(r.estimate)} strong />
+            <p className="hint">
+              Löpande kostnader omräknas till ett värde idag med {(v.discountRate * 100).toLocaleString('sv-SE')} % diskonteringsränta
+              (100 kr/mån ≈ {formatKr(1200 / v.discountRate)}). Procentjusteringar är tumregler. Se resultatet som ett
+              resonemangsunderlag, inte en exakt värdering.
+            </p>
+          </section>
+        }
+      >
       <Card title="Jämförelse med området">
+        <p className="hint">Exempelvärdena är påhittade. Fyll i din egen lägenhet.</p>
         <div className="grid">
           <NumberField label="Områdespris (liknande lgh)" value={v.areaPricePerSqm} onChange={f('areaPricePerSqm')} step={1000} suffix="kr/kvm" hint="Snitt för sålda lägenheter i området, t.ex. från Booli eller Hemnet" />
           <NumberField label="Boyta" value={v.area} onChange={f('area')} suffix="kvm" />
@@ -157,12 +157,13 @@ export default function Varde() {
         <CheckField label="Saknar balkong" value={v.noBalcony} onChange={f('noBalcony')} />
         <CheckField label="Ingen hiss och högt upp (3 tr eller mer)" value={v.noElevatorHighFloor} onChange={f('noElevatorHighFloor')} />
         <div className="grid">
-          {v.groundFloor && <PercentField label="Justering bottenvåning" value={v.groundFloorPct} onChange={f('groundFloorPct')} />}
-          {v.noBalcony && <PercentField label="Justering balkong" value={v.noBalconyPct} onChange={f('noBalconyPct')} />}
-          {v.noElevatorHighFloor && <PercentField label="Justering hiss" value={v.noElevatorPct} onChange={f('noElevatorPct')} />}
+          {v.groundFloor && <PercentField label="Justering bottenvåning" value={v.groundFloorPct} onChange={f('groundFloorPct')} negative />}
+          {v.noBalcony && <PercentField label="Justering balkong" value={v.noBalconyPct} onChange={f('noBalconyPct')} negative />}
+          {v.noElevatorHighFloor && <PercentField label="Justering hiss" value={v.noElevatorPct} onChange={f('noElevatorPct')} negative />}
           <NumberField label="Renoveringsbehov" value={v.renovationNeed} onChange={f('renovationNeed')} step={10000} suffix="kr" />
         </div>
       </Card>
+      </Tool>
     </div>
   );
 }

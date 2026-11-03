@@ -27,12 +27,12 @@ experimentell varning vid start).
 | Flik | Innehåll |
 |---|---|
 | **Ny analys** (startsidan) | Annonsuppgifter + årsredovisning → samlad rapport som kan sparas som PDF. Se nedan. |
-| **Månadskostnad & KALP** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell ränta × avgiftshöjning. |
-| **Vad har jag råd med?** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling och vad som begränsar (insats, KALP eller skuldkvot). |
-| **Granska BRF** | Nyckeltal från årsredovisningen med trafikljus (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet), varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
+| **Månadskostnad** | Månadskostnad med verklig ränta (ränteavdrag, amortering, avgift, drift), bankens KALP med kalkylränta och schabloner, kontroll av kontantinsats och skuldkvot, känslighetstabell ränta × avgiftshöjning. |
+| **Budget** | Försäljning av nuvarande bostad (vinstskatt 22 %, uppskov, mäklararvode, lösen av lån) → tillgänglig insats → högsta köpeskilling och vad som begränsar (insats, KALP eller skuldkvot). |
+| **Förening** | Nyckeltal från årsredovisningen med trafikljus (skuld/kvm, sparande/kvm, räntekänslighet, avgift/kvm, energi/kvm, avgiftsandel, likviditet), varningar (tomträtt, oäkta förening, stambyte) och "verkligt pris" inklusive lägenhetens andel av föreningens lån. |
 | **Värdering** | Områdespris justerat i kronor för föreningens skuld, avgift, direktverkande el, stambyte, tomträtt, hyresrätter, bottenvåning/balkong/hiss. |
-| **Kostnad över tid** | Månadskostnaden 10 år framåt (2 000 simulerade räntebanor, median och 10–90-percentil), "räntan slår dubbelt" och kända händelser i föreningen. |
-| **Rapportera slutpris** | Användare bidrar med slutpriser (samtycke och raderingsnyckel) – underlag för en framtida värderingsmodell. |
+| **Över tid** | Månadskostnaden 10 år framåt (2 000 simulerade räntebanor, median och 10–90-percentil), "räntan slår dubbelt" och kända händelser i föreningen. |
+| **Slutpris** | Användare bidrar med slutpriser (samtycke och raderingsnyckel) – underlag för en framtida värderingsmodell. |
 
 ### Ny analys
 
