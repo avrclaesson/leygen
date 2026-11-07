@@ -36,3 +36,5 @@ npm run eval       # jämför modeller på årsredovisningar i eval/reports/
 - Siffror och tumregler ska ha en källa eller tydligt märkas som antagande i gränssnittet.
 - Regler (bolånetak, amorteringskrav, ränteavdrag) ligger i `web/src/lib/rules.ts`.
 - Inga skrapade data från Booli/Hemnet.
+- Marknadsdata (prisfall, snittpriser per kommun) ligger i `web/src/lib/marketData.ts` med källa och datum för varje
+  siffra. Hårdkoda inte sådana siffror någon annanstans.

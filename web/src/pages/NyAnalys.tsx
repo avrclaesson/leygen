@@ -19,6 +19,7 @@ import { rateShock, simulate } from '../lib/projection';
 import { MARKET_CENTRAL, MARKET_SUBURB, valuate, valuateMarket } from '../lib/valuation';
 import { formatDec, formatKr, formatNum, formatPct } from '../lib/format';
 import { REGIONS, resilience } from '../lib/resilience';
+import { MARKET_REGIONS, formatAsOf, isStale, type DataPoint } from '../lib/marketData';
 
 const STEPS = ['Bostaden', 'Föreningen', 'Din ekonomi', 'Resultat'];
 const RESULT_STEP = STEPS.length - 1;
@@ -58,8 +59,10 @@ export default function NyAnalys() {
   const [h, setH] = useState<Household>(DEFAULT_HOUSEHOLD);
   const [extracted, setExtracted] = useState<ExtractionResult | null>(null);
   const [regionId, setRegionId] = useState('stockholm');
-  const [municipalMedian, setMunicipalMedian] = useState(55_000);
+  // Prissegment har svagt underlag och är därför avstängt som standard.
+  const [segmentOn, setSegmentOn] = useState(false);
   const [segmentSensitivity, setSegmentSensitivity] = useState(0.5);
+  const [municipalOverride, setMunicipalOverride] = useState<number | null>(null);
   const fl = setter(l, setL);
   const fa = setter(a, setA);
 
@@ -80,6 +83,12 @@ export default function NyAnalys() {
   const brf = brfIn ? analyzeBrf(brfIn) : null;
   const in5 = projection[5];
   const region = REGIONS.find((r) => r.id === regionId)!;
+  const marketData = MARKET_REGIONS.find((r) => r.id === regionId)!;
+  const municipalMedian = municipalOverride ?? marketData.avgPricePerSqm?.value ?? null;
+  const ownPricePerSqm = l.area > 0 ? l.price / l.area : 0;
+  const segmentActive = segmentOn && municipalMedian !== null && municipalMedian > 0;
+  const now = new Date();
+  const sourceText = (d: DataPoint) => `${d.source}, ${formatAsOf(d.asOf)}${isStale(d, now) ? ' – kan vara inaktuell' : ''}`;
   const res = resilience({
     price: l.price,
     area: l.area,
@@ -87,8 +96,8 @@ export default function NyAnalys() {
     ownRate: l.interestRate,
     monthlyFee: l.monthlyFee,
     region,
-    priceRatio: municipalMedian > 0 && l.area > 0 ? l.price / l.area / municipalMedian : 1,
-    segmentSensitivity,
+    priceRatio: segmentActive ? ownPricePerSqm / municipalMedian : 1,
+    segmentSensitivity: segmentActive ? segmentSensitivity : 0,
     debtPerSqm: a.debtPerSqm,
     areaDebtPerSqm: a.areaDebtPerSqm,
     brfBindingYears: a.brfBindingYears,
@@ -235,12 +244,20 @@ export default function NyAnalys() {
               <summary>Så räknar vi</summary>
               <ul className="facts">
                 <li>
-                  <strong>Marknaden:</strong> {region.label} föll {formatPct(Math.abs(region.drop2022))} från toppen 2022 (Svensk Mäklarstatistik). Djup kris
+                  <strong>Marknaden:</strong> {region.label} föll {formatPct(Math.abs(region.drop2022))} från toppen 2022 (
+                  {marketData.drop2022.url ? <a href={marketData.drop2022.url}>{sourceText(marketData.drop2022)}</a> : sourceText(marketData.drop2022)}). Djup kris
                   antas bli 1,5 gånger så stor – villapriserna föll ca 21 % på 90-talet.
                 </li>
                 <li>
-                  <strong>Prissegment:</strong> kvm-priset är {formatDec((l.price / l.area / municipalMedian) * 100)} % av kommunens snitt. Billigare bostäder
-                  har svängt mer i amerikanska data; svenska data per segment saknas, så känsligheten är ett antagande.
+                  <strong>Föreningen</strong> och <strong>marknaden</strong> är de delar med bäst underlag. Det var räntan som drev nedgången 2022.
+                </li>
+                <li>
+                  <strong>Prissegment:</strong>{' '}
+                  {segmentActive
+                    ? <>påslaget. Kvm-priset är {formatDec((ownPricePerSqm / municipalMedian!) * 100)} % av kommunens snitt.</>
+                    : 'avstängt.'}{' '}
+                  Att billigare bostäder svänger mer stöds av amerikanska data, men i Sverige 2022 föll billiga Malmö lika lite som Stockholm, och
+                  kvm-pris blandar ihop läge med lägenhetens storlek (små lägenheter har högre kvm-pris). Därför är det ett osäkert antagande.
                 </li>
                 <li>
                   <strong>Föreningen:</strong> skulden jämfört med områdets typiska nivå avgör hur mycket mer (eller mindre) avgiften stiger när räntan
@@ -251,8 +268,27 @@ export default function NyAnalys() {
                   lånet är större än bostadens värde.
                 </li>
               </ul>
-              <div className="grid no-print">
-                <PercentField label="Känslighet för prissegment" value={segmentSensitivity} onChange={setSegmentSensitivity} hint="50 % ⇒ en bostad 30 % billigare än snittet faller 15 % mer" />
+              <div className="no-print">
+                <CheckField label="Räkna med prissegment (osäkert)" value={segmentOn} onChange={setSegmentOn} />
+                {segmentOn && (
+                  <div className="grid">
+                    <NumberField
+                      label="Kommunens snittpris"
+                      value={municipalMedian ?? 0}
+                      onChange={(v) => setMunicipalOverride(v || null)}
+                      step={1000}
+                      suffix="kr/kvm"
+                      hint={
+                        municipalOverride !== null
+                          ? 'Ditt eget värde.'
+                          : marketData.avgPricePerSqm
+                            ? `${sourceText(marketData.avgPricePerSqm)}.${marketData.avgPricePerSqm.note ? ` ${marketData.avgPricePerSqm.note}` : ''}`
+                            : 'Saknas för den här kommunen – fyll i snittpriset från Svensk Mäklarstatistik.'
+                      }
+                    />
+                    <PercentField label="Känslighet för prissegment" value={segmentSensitivity} onChange={setSegmentSensitivity} hint="50 % ⇒ en bostad 30 % billigare än snittet faller 15 % mer" />
+                  </div>
+                )}
               </div>
             </details>
           </Card>
@@ -318,7 +354,7 @@ export default function NyAnalys() {
               </Card>
               <Card title="Området">
                 <div className="grid">
-                  <NumberField label="Jämförelsepris" value={l.areaPricePerSqm} onChange={fl('areaPricePerSqm')} step={1000} suffix="kr/kvm" hint="Snittpris för sålda lägenheter i området, t.ex. på Booli eller Hemnet" />
+                  <NumberField label="Jämförelsepris" value={l.areaPricePerSqm} onChange={fl('areaPricePerSqm')} step={1000} suffix="kr/kvm" hint="Utgångspunkt för värderingen: snittpris för sålda liknande lägenheter i närområdet, t.ex. på Booli eller Hemnet" />
                   <label className="field">
                     <span className="field-label">Läge</span>
                     <select value={l.location} onChange={(e) => fl('location')(e.target.value as Listing['location'])}>
@@ -328,11 +364,17 @@ export default function NyAnalys() {
                   </label>
                   <label className="field">
                     <span className="field-label">Kommun</span>
-                    <select value={regionId} onChange={(e) => setRegionId(e.target.value)}>
+                    <select
+                      value={regionId}
+                      onChange={(e) => {
+                        setRegionId(e.target.value);
+                        setMunicipalOverride(null);
+                      }}
+                    >
                       {REGIONS.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
                     </select>
+                    <small className="hint">Används för prisfall i scenarierna för nedgång.</small>
                   </label>
-                  <NumberField label="Kommunens snittpris" value={municipalMedian} onChange={setMunicipalMedian} step={1000} suffix="kr/kvm" hint="Bostadsrätter i hela kommunen (Mäklarstatistik)" />
                 </div>
               </Card>
             </>

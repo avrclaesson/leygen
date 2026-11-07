@@ -44,9 +44,10 @@ Fyll i uppgifterna från annonsen, ladda upp årsredovisningen (eller sök före
 - **Månadskostnad** idag och om 5 år, **bankens KALP** och **föreningens betyg**.
 - **Kostnad över tid** med stambyte och ny tomträttsavgäld inlagda automatiskt från årsredovisningen.
 - **Motståndskraft vid nedgång:** tre scenarier (mild, som 2022–23, djup kris som 90-talet). Värdeförändringen delas
-  upp i marknaden (regionens prisfall från toppen 2022), prissegment (billigare kvm-pris antas svänga mer) och
-  föreningen (skuld över områdets nivå ⇒ större avgiftshöjning när räntan stiger ⇒ större prisfall). Visar även
-  belåningsgrad och ökad månadskostnad i varje scenario.
+  upp i marknaden (regionens prisfall från toppen 2022) och föreningen (skuld över områdets nivå ⇒ större
+  avgiftshöjning när räntan stiger ⇒ större prisfall) – de två delarna med bäst underlag. Prissegment (billigare
+  kvm-pris antas svänga mer) har svagt underlag och är avstängt som standard. Visar även belåningsgrad och ökad
+  månadskostnad i varje scenario.
 
 ### Inläsning av årsredovisning (AI)
 
@@ -80,6 +81,7 @@ Sonnet, svarar ogiltigt eller klarar inte kontrollen körs dokumentet om med Cla
 | `web/src/lib/valuation.ts` | Ekonomisk värdering och marknadsvärdering |
 | `web/src/lib/projection.ts` | Simulering av kostnad över tid |
 | `web/src/lib/resilience.ts` | Scenarier för nedgång |
+| `web/src/lib/marketData.ts` | Marknadsdata per kommun med källa och datum – uppdateras för hand |
 | `web/src/lib/analysis.ts` | Kopplar annons + årsredovisning till beräkningarna |
 | `web/src/lib/brfExtractionSchema.ts` | Schema för AI-inläsningen |
 | `web/server/extractBrf.ts` | Instruktioner till Claude, modellval och eskalering |
@@ -150,7 +152,8 @@ Verifiera mot Finansinspektionen och Konsumentverket innan lansering.
 | Balkong +1,9 % | [Booli 2024](https://www.booli.se/kunskap/sa-mycket-okar-vardet-om-din-lagenhet-har-balkong) |
 | Prisfall från toppen 2022: Stockholm −12 %, Malmö −13 %, Uppsala −15 %, Göteborg −17 %, riket −14 % | Svensk Mäklarstatistik via [Placera 2026-10-28](https://www.placera.se/nyheter/bostadsratterna-forbi-pristoppen-2022-villorna-har-en-bit-kvar-2026-10-28) |
 | 90-talskrisen: villapriserna −21 %, ca 7 år till återhämtning | [Nordea](https://www.nordea.com/sv/nyhet/storm-pa-bostadsmarknaden-i-sverige) |
-| Billigare prissegment svänger mer | Amerikanska data ([Springer 2015](https://link.springer.com/article/10.1007/s11146-015-9523-2)); svenska data saknas – antagande |
+| Billigare prissegment svänger mer (avstängt som standard) | Amerikanska data ([Springer 2015](https://link.springer.com/article/10.1007/s11146-015-9523-2)). Svagt i Sverige: Malmö är billigt men föll lika lite som Stockholm 2022, och kvm-pris blandar ihop läge med storlek. |
+| Kommunens snittpris (för prissegment) | Svensk Mäklarstatistik: Stor-Stockholm 69 556 kr/kvm (okt 2025), Stor-Malmö 35 787 (mar 2026), riket 47 995 (maj 2026). Göteborg och Uppsala saknas. |
 | Ekonomisk värdering kapitaliserar löpande kostnader med 5 % (100 kr/mån ≈ 24 000 kr) | Antagande |
 | Bottenvåning −5 %, ingen hiss högt upp −5 % | Tumregler, inte uppmätta |
 | Stambyte, direktverkande el | Inga studier hittade – kostnadsbaserade antaganden |

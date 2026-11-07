@@ -4,11 +4,13 @@
  * Fyra delar:
  *  1. Marknaden i regionen – historiska prisfall (Mäklarstatistik, topp 2022 → botten).
  *  2. Prissegment – billigare bostäder (kr/kvm jämfört med kommunen) svänger mer.
- *     Stöds av amerikanska data; svenska data per segment saknas, så känsligheten är ett antagande.
+ *     Svagt underlag: stöds av amerikanska data, men i Sverige 2022 föll t.ex. billiga Malmö lika lite
+ *     som Stockholm, och kvm-pris blandar ihop läge med lägenhetens storlek. Avstängt som standard (känslighet 0).
  *  3. Föreningen – i en räntedriven nedgång höjs avgiften mer i föreningar med mer skuld
  *     än områdets typiska. Avgiftshöjningen prisas in med ca −2,5 % per 1 000 kr/mån (Wilhelmsson, KTH 2025).
  *  4. Din ekonomi – belåningsgrad och månadskostnad i scenariot.
  */
+import { MARKET_REGIONS } from './marketData.ts';
 import { interestDeduction } from './rules.ts';
 
 export interface Region {
@@ -19,14 +21,13 @@ export interface Region {
   source: string;
 }
 
-/** Svensk Mäklarstatistik via Placera 2026-10-28 (största kommunen i länet). */
-export const REGIONS: Region[] = [
-  { id: 'stockholm', label: 'Stockholm', drop2022: -0.12, source: 'Mäklarstatistik' },
-  { id: 'malmo', label: 'Malmö', drop2022: -0.13, source: 'Mäklarstatistik' },
-  { id: 'uppsala', label: 'Uppsala', drop2022: -0.15, source: 'Mäklarstatistik' },
-  { id: 'goteborg', label: 'Göteborg', drop2022: -0.17, source: 'Mäklarstatistik' },
-  { id: 'riket', label: 'Övriga Sverige (riket)', drop2022: -0.14, source: 'Mäklarstatistik' },
-];
+/** Regioner med prisfall 2022 – källor och datum finns i marketData.ts. */
+export const REGIONS: Region[] = MARKET_REGIONS.map((r) => ({
+  id: r.id,
+  label: r.label,
+  drop2022: r.drop2022.value,
+  source: r.drop2022.source,
+}));
 
 export interface Scenario {
   id: 'mild' | 'like2022' | 'deep';
