@@ -3,8 +3,8 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { ExtractedBrfSchema, type ExtractedBrf } from '../src/lib/brfExtractionSchema.ts';
 import { checkConsistency, type ConsistencyIssue } from '../src/lib/brfExtraction.ts';
 
-/** Snabb och billig modell för första försöket. */
-const PRIMARY_MODEL = process.env.BRF_MODEL ?? 'claude-haiku-5-5';
+/** Förstahandsmodell. Sonnet var tydligt bättre än Haiku på dokument i förra generationens tester; kör `npm run eval` innan du byter till Haiku. */
+const PRIMARY_MODEL = process.env.BRF_MODEL ?? 'claude-sonnet-5-5';
 /** Används om första försöket avböjs, inte går att tolka eller inte klarar rimlighetskontrollen. Tom sträng = av. */
 const ESCALATION_MODEL = process.env.BRF_ESCALATION_MODEL ?? 'claude-opus-5-5';
 
@@ -58,7 +58,7 @@ async function runExtraction(client: Anthropic, model: string, pdf: Buffer): Pro
   const stream = client.beta.messages.stream({
     model,
     max_tokens: 32_000,
-    // Haiku saknar server-side fallback – där eskalerar vi själva i extractBrf().
+    // Haiku (om den väljs via BRF_MODEL) saknar server-side fallback – där eskalerar vi själva i extractBrf().
     ...(isHaiku ? {} : { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const }),
     output_config: { effort: 'high', format: betaZodOutputFormat(ExtractedBrfSchema) },
     system: SYSTEM_PROMPT,

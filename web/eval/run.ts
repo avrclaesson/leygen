@@ -8,14 +8,14 @@
  * Facitfilen innehåller de fält du vill kontrollera, t.ex.
  *   { "residentialArea": 4210, "interestBearingDebt": 28150000, "leasehold": false }
  *
- * Kör: ANTHROPIC_API_KEY=... npm run eval -- claude-haiku-5-5 claude-opus-5-5
+ * Kör: ANTHROPIC_API_KEY=... npm run eval -- claude-haiku-5-5 claude-sonnet-5-5
  */
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 
 const dir = join(import.meta.dirname, 'reports');
-const models = process.argv.slice(2).length ? process.argv.slice(2) : ['claude-haiku-5-5', 'claude-opus-5-5'];
+const models = process.argv.slice(2).length ? process.argv.slice(2) : ['claude-haiku-5-5', 'claude-sonnet-5-5'];
 const client = new Anthropic();
 
 function matches(expected: unknown, actual: unknown): boolean {
